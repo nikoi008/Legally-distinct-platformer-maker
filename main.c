@@ -9,7 +9,7 @@
 #define WORLD_H 50
 #define TILE_SIZE 8
 
-typedef enum { MENU, EDITOR } GameState;
+typedef enum { MENU, EDITOR, PLATFORMER} GameState;
 
 unsigned char worldMap[WORLD_W * WORLD_H] = { 0 }; 
 Camera2D camera = { 0 };
@@ -122,7 +122,7 @@ bool editorFrame() {
         if (mapX >= 0 && mapX < WORLD_W && mapY >= 0 && mapY < WORLD_H) {
             if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !IsKeyDown(KEY_LEFT_SHIFT) && virtualMouse.y < SCREEN_H - 32) /*worldMap[mapY * WORLD_W + mapX] = currentTile*/ placeTile(mapX,mapY,currentTile);
             if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) worldMap[mapY * WORLD_W + mapX] = 0;  
-            DrawRectangleLines(mapX * TILE_SIZE, mapY * TILE_SIZE, TILE_SIZE, TILE_SIZE, BLUE);
+            DrawRectangleLines(mapX * TILE_SIZE, mapY * TILE_SIZE, TILE_SIZE, TILE_SIZE, BLUE); 
             
         }
         for (int y = 0; y < WORLD_H; y++) {
@@ -150,18 +150,95 @@ bool editorFrame() {
     EndMode2D();
     return editing;
 }
+void DrawLevel(){
+    for (int y = 0; y < WORLD_H; y++) {
+        for (int x = 0; x < WORLD_W; x++) {
+            switch(worldMap[y * WORLD_W + x]){
+            case 0:
+                //DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE - 2, TILE_SIZE - 2, WHITE);
+                break;
+            case 1:
+                DrawTexture(blocks[1].sprite, x * TILE_SIZE, y * TILE_SIZE,WHITE);
+                break;
+            case 2:
+                DrawTexture(blocks[2].sprite, x * TILE_SIZE, y * TILE_SIZE,WHITE);
+                break;  
+            case 3:
+                DrawTexture(blocks[3].sprite, x * TILE_SIZE, y * TILE_SIZE,WHITE);
+                break;
+            
+            }
+    }
+}
+}
+typedef struct{
+    Texture2D pTex;
+    int x;
+    int y;
+    int tileX;
+    int tileY;
+    int acceleration;
+    int maxSpeed;
+    bool jumping;
+    bool falling;
+    bool sprinting;
+    int powerup;
+    bool facingRight;
 
+} playe;
+playe player = {0};
+void initPlayer(){
+   player.x = flagPos.x * 8;
+   player.y = flagPos.y * 8;
+   player.tileX = flagPos.x;
+   player.tileY = flagPos.y;
+   player.acceleration = 0;
+   player.maxSpeed = 5;
+   player.jumping = false;
+   player.falling = false;
+   player.sprinting = false;
+   player.powerup = 0;
+   player.facingRight = false;
+}
+
+void coordsToTile(){
+    player.tileX = player.x / 8;
+    player.tileY = player.y / 8;
+}
+void playerInput(){
+    if(IsKeyDown(KEY_LEFT)){
+        player.x--;
+        player.facingRight = false;
+    }
+    if(IsKeyDown(KEY_RIGHT)){
+        player.x++;
+        player.facingRight = true;
+    }
+    if(IsKeyDown(KEY_SPACE)){
+        
+    }
+}
+void drawPlayer() {
+    DrawTexture(player.pTex,player.x,player.y,WHITE);
+}
 void platformerFrame(){
-    DrawText("its a me",100,100,10,BLACK);
+    DrawLevel();
+    coordsToTile();
+    
+    playerInput();
+    drawPlayer();
+   // DrawText("its a me",100,100,10,BLACK);
+
 }
 int main() {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(SCREEN_W, SCREEN_H, "Legally distinct mario maker");
+    InitWindow(SCREEN_W, SCREEN_H, "Legally distinct mario maker");       
     SetTargetFPS(60);
     initBlocks();
-    GameState currentState = MENU;
+    GameState currentState = MENU;             
     camera.zoom = 1.0f;
     RenderTexture2D window = LoadRenderTexture(SCREEN_W, SCREEN_H);
+    player.pTex = LoadTexture("player.png");
 
     while (!WindowShouldClose()) {
         float scale = fminf((float)GetScreenWidth()/SCREEN_W, (float)GetScreenHeight()/SCREEN_H);
@@ -175,16 +252,25 @@ int main() {
 
         BeginTextureMode(window);
             ClearBackground(RAYWHITE);
-            if (currentState == MENU) {        
-                DrawText("Menu", 110, 110, 10, DARKGRAY); 
-                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) currentState = EDITOR;
-            } else {
-                if(editorFrame()){
-                tileSelect();
-                }else{
+            switch(currentState){
+                case(MENU):
+                    DrawText("Menu", 110, 110, 10, DARKGRAY); 
+                    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) currentState = EDITOR;
+                    break;
+                case(EDITOR):
+                    if(editorFrame()){
+                        tileSelect();
+                    }else{
+                        initPlayer();
+                        currentState = PLATFORMER;
+                    }
+                    break;
+                case(PLATFORMER):
                     platformerFrame();
-                }
+
+                    break;
             }
+
             
         EndTextureMode();
         
