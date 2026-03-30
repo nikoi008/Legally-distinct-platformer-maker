@@ -111,8 +111,9 @@ void placeTile(int tileX, int tileY, int tileID){
 }
 
 bool editing = true;
-bool editorFrame() {
+bool editorFrame(Texture2D flagWarning) {
     BeginMode2D(camera);
+    static int warningFrames = 0;
         for (int x = 0; x <= WORLD_W; x++) 
             DrawLine(x * TILE_SIZE, 0, x * TILE_SIZE, WORLD_H * TILE_SIZE, GRAY);
         for (int y = 0; y <= WORLD_H; y++) 
@@ -135,7 +136,19 @@ bool editorFrame() {
                 }
             }
         }
-        if(IsKeyPressed(KEY_P)) editing = false;  
+        if(IsKeyPressed(KEY_P)){
+            if(flagPos.x != -1){
+                editing = false;
+            }else{
+                warningFrames = 180;
+            }
+        }
+        if(warningFrames > 0){
+            EndMode2D();
+            DrawTexture(flagWarning,SCREEN_W-flagWarning.width,0,WHITE);
+            warningFrames--;
+            BeginMode2D(camera);
+        }
     EndMode2D();
     return editing;
 }
@@ -150,7 +163,6 @@ void DrawLevel(){
         }
     }
 }
-
 typedef struct{
     Texture2D pTex;
     int x;
@@ -174,19 +186,19 @@ void initPlayer(){
     SetTextureFilter(player.pTex, TEXTURE_FILTER_POINT);
     camera.offset = (Vector2){ SCREEN_W/2.0f, SCREEN_H/2.0f }; 
     camera.zoom = 1.0f;
-   player.x = flagPos.x * 8;
-   player.y = flagPos.y * 8;
-   camera.target = (Vector2){player.x + 4,player.y + 4};
-   player.tileX = flagPos.x;
-   player.tileY = flagPos.y;
-   player.acceleration = 0.2f;
-   player.maxSpeed = 3.0f;
-   player.currentSpeed = 0.0f;
-   player.jumping = false;
-   player.falling = false;
-   player.sprinting = false;
-   player.powerup = 0;
-   player.facingRight = false;
+    player.x = flagPos.x * 8;
+    player.y = flagPos.y * 8;
+    camera.target = (Vector2){player.x + 4,player.y + 4};
+    player.tileX = flagPos.x;
+    player.tileY = flagPos.y;
+    player.acceleration = 0.2f;
+    player.maxSpeed = 3.0f;
+    player.currentSpeed = 0.0f;
+    player.jumping = false;
+    player.falling = false;
+    player.sprinting = false;
+    player.powerup = 0;
+    player.facingRight = false;
 }
 
 #define GRAVITY 0.5f
@@ -194,6 +206,7 @@ void initPlayer(){
 
 bool tileSolid(int x, int y){
     if(x / TILE_SIZE < 0 || x / TILE_SIZE >= WORLD_W || y / TILE_SIZE < 0 || y / TILE_SIZE >= WORLD_H) return true;
+    return blocks[worldMap[y /8][x /8]].solid;
 }
 
 void playerCamera(){
@@ -201,9 +214,8 @@ void playerCamera(){
     camera.target = Vector2Lerp(camera.target, targetPos, 0.1f);
 }
 
-void coordsToTile(){
-    player.tileX = player.x / 8;
-    player.tileY = player.y / 8;
+int coordsToTile(int coord){
+    return coord / 8;
 }
 
 void playerInput(){
@@ -249,7 +261,8 @@ void drawPlayer() {
 void platformerFrame(){
     BeginMode2D(camera);
     DrawLevel();
-    coordsToTile();
+    player.tileX = coordsToTile(player.x);
+    player.tileY = coordsToTile(player.y);
     playerPhysics();
     playerInput();
     drawPlayer();
@@ -266,6 +279,8 @@ int main() {
     camera.zoom = 1.0f;
     RenderTexture2D window = LoadRenderTexture(SCREEN_W, SCREEN_H);
     player.pTex = LoadTexture("player.png");
+    Texture2D flagWarning = LoadTexture("flag_warning.png");
+
     SetTextureFilter(window.texture, TEXTURE_FILTER_POINT);
     while (!WindowShouldClose()) {
         float scale = fminf((float)GetScreenWidth()/SCREEN_W, (float)GetScreenHeight()/SCREEN_H);
@@ -285,7 +300,7 @@ int main() {
                     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) currentState = EDITOR;
                     break;
                 case(EDITOR):
-                    if(editorFrame()){
+                    if(editorFrame(flagWarning)){
                         tileSelect();
                     }else{
                         initPlayer();
@@ -296,6 +311,7 @@ int main() {
                     platformerFrame();
                     if(IsKeyPressed(KEY_E)){
                         currentState = EDITOR;
+                        flagPos = (Vector2){-1,-1};
                         editing = true;
                     }
                     break;
