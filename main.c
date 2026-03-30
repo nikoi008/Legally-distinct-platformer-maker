@@ -11,7 +11,7 @@
 
 typedef enum { MENU, EDITOR, PLATFORMER} GameState;
 
-unsigned char worldMap[WORLD_W * WORLD_H] = { 0 }; 
+unsigned char worldMap[WORLD_H][WORLD_W] = { 0 }; 
 Camera2D camera = { 0 };
 Vector2 virtualMouse = { 0 };
 
@@ -29,7 +29,7 @@ void cameraInput() {
         camera.target = mouseWorldPos;
         camera.zoom = Clamp(camera.zoom + wheel * 0.1f, 0.33f, 3.0f);
     }
-}
+}  
 
 typedef struct
 {
@@ -38,13 +38,13 @@ typedef struct
     bool solid; 
     bool coyoteTime; 
     bool isUnique;
-    
-    
 }block;
+
 block blocks[4] = {0};
 Vector2 flagPos = {-1,-1};
 #define TOTAL_BLOCKS 4
 int currentTile = 1;
+
 void tileSelect() {
     DrawRectangle(0, SCREEN_H - 32, SCREEN_W, 32, GRAY);
     for (int i = 0; i < TOTAL_BLOCKS; i++) { 
@@ -62,6 +62,7 @@ void tileSelect() {
         }
     }
 }
+
 void initBlocks(){
     Texture2D air = LoadTexture("air.png");
     blocks[0].sprite = air;    
@@ -89,32 +90,29 @@ void initBlocks(){
     blocks[3].solid = false;
     blocks[3].coyoteTime = false;
     blocks[3].isUnique = true;
-    for(int i  =0; i < TOTAL_BLOCKS; i++){
+    for(int i   =0; i < TOTAL_BLOCKS; i++){
         SetTextureFilter(blocks[i].sprite, TEXTURE_FILTER_POINT);
     }
-
 }
+
 void placeTile(int tileX, int tileY, int tileID){
         if(blocks[tileID].isUnique == true){
             switch(tileID){
                 case 3:
                     if(flagPos.x != -1){
-                        worldMap[(int)flagPos.y * WORLD_W + (int)(flagPos.x)] = 0;
+                        worldMap[(int)flagPos.y][(int)flagPos.x] = 0;
                     }
                     flagPos.x = tileX;
                     flagPos.y = tileY;
                     break;
             }
         }
-        worldMap[tileY * WORLD_W + tileX] = tileID;
-        
+        worldMap[tileY][tileX] = tileID;
 }
+
 bool editing = true;
 bool editorFrame() {
     BeginMode2D(camera);
-        printf("flag X %f",flagPos.x);
-        printf("flag Y %f",flagPos.y);
-        
         for (int x = 0; x <= WORLD_W; x++) 
             DrawLine(x * TILE_SIZE, 0, x * TILE_SIZE, WORLD_H * TILE_SIZE, GRAY);
         for (int y = 0; y <= WORLD_H; y++) 
@@ -124,57 +122,35 @@ bool editorFrame() {
         int mapY = (int)(worldMouse.y / TILE_SIZE);
 
         if (mapX >= 0 && mapX < WORLD_W && mapY >= 0 && mapY < WORLD_H) {
-            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !IsKeyDown(KEY_LEFT_SHIFT) && virtualMouse.y < SCREEN_H - 32) /*worldMap[mapY * WORLD_W + mapX] = currentTile*/ placeTile(mapX,mapY,currentTile);
-            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) worldMap[mapY * WORLD_W + mapX] = 0;  
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !IsKeyDown(KEY_LEFT_SHIFT) && virtualMouse.y < SCREEN_H - 32) placeTile(mapX,mapY,currentTile);
+            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) worldMap[mapY][mapX] = 0;  
             DrawRectangleLines(mapX * TILE_SIZE, mapY * TILE_SIZE, TILE_SIZE, TILE_SIZE, BLUE); 
-            
         }
+
         for (int y = 0; y < WORLD_H; y++) {
             for (int x = 0; x < WORLD_W; x++) {
-                switch(worldMap[y * WORLD_W + x]){
-                case 0:
-                    //DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE - 2, TILE_SIZE - 2, WHITE);
-                    break;
-                case 1:
-                    DrawTexture(blocks[1].sprite, x * TILE_SIZE, y * TILE_SIZE,WHITE);
-                    break;
-                case 2:
-                    DrawTexture(blocks[2].sprite, x * TILE_SIZE, y * TILE_SIZE,WHITE);
-                    break;  
-                case 3:
-                    DrawTexture(blocks[3].sprite, x * TILE_SIZE, y * TILE_SIZE,WHITE);
-                    break;
-                
+                int tileID = worldMap[y][x];
+                if (tileID > 0 && tileID < TOTAL_BLOCKS) {
+                    DrawTexture(blocks[tileID].sprite, x * TILE_SIZE, y * TILE_SIZE, WHITE);
                 }
             }
         }
         if(IsKeyPressed(KEY_P)) editing = false;  
-
-        
     EndMode2D();
     return editing;
 }
+
 void DrawLevel(){
     for (int y = 0; y < WORLD_H; y++) {
         for (int x = 0; x < WORLD_W; x++) {
-            switch(worldMap[y * WORLD_W + x]){
-            case 0:
-                //DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE - 2, TILE_SIZE - 2, WHITE);
-                break;
-            case 1:
-                DrawTexture(blocks[1].sprite, x * TILE_SIZE, y * TILE_SIZE,WHITE);
-                break;
-            case 2:
-                DrawTexture(blocks[2].sprite, x * TILE_SIZE, y * TILE_SIZE,WHITE);
-                break;  
-            case 3:
-                DrawTexture(blocks[3].sprite, x * TILE_SIZE, y * TILE_SIZE,WHITE);
-                break;
-            
+            int tileID = worldMap[y][x];
+            if (tileID > 0 && tileID < TOTAL_BLOCKS) {
+                DrawTexture(blocks[tileID].sprite, x * TILE_SIZE, y * TILE_SIZE, WHITE);
             }
+        }
     }
 }
-}
+
 typedef struct{
     Texture2D pTex;
     int x;
@@ -191,14 +167,12 @@ typedef struct{
     float currentSpeed;
     float speedY;
     bool onGround;
-
 } playe;
 playe player = {0};
 
 void initPlayer(){
     SetTextureFilter(player.pTex, TEXTURE_FILTER_POINT);
     camera.offset = (Vector2){ SCREEN_W/2.0f, SCREEN_H/2.0f }; 
-    
     camera.zoom = 1.0f;
    player.x = flagPos.x * 8;
    player.y = flagPos.y * 8;
@@ -214,42 +188,33 @@ void initPlayer(){
    player.powerup = 0;
    player.facingRight = false;
 }
+
 #define GRAVITY 0.5f
 #define JUMP_FORCE 5.0f
+
 bool tileSolid(int x, int y){
-    if(x / TILE_SIZE < 0 || x /TILE_SIZE >= WORLD_W || y / TILE_SIZE < 0 || y /TILE_SIZE >= WORLD_H)return true;
-    return blocks[worldMap[(y / TILE_SIZE) * WORLD_W + (x / TILE_SIZE)]].solid;
+    if(x / TILE_SIZE < 0 || x / TILE_SIZE >= WORLD_W || y / TILE_SIZE < 0 || y / TILE_SIZE >= WORLD_H) return true;
 }
+
 void playerCamera(){
     Vector2 targetPos = (Vector2){ player.x + 4, player.y + 4}; 
     camera.target = Vector2Lerp(camera.target, targetPos, 0.1f);
 }
 
-void playerJump(){
-    static int jumpStartY ;
-    if(!player.jumping){
-       jumpStartY = player.y;
-       player.y-= 10;
-       player.jumping = true;  
-    }
-    
-    if(player.y <= jumpStartY && player.jumping && tileSolid(player.tileX,player.tileY)){
-        player.jumping = false; //add a function in input to make sure you cant jump when solid blocks arent below you
-    }
-}
 void coordsToTile(){
     player.tileX = player.x / 8;
     player.tileY = player.y / 8;
 }
+
 void playerInput(){
     bool moving = false;  
-    if(IsKeyDown(KEY_LEFT) && !tileSolid(player.x - TILE_SIZE,player.y)){
+    if(IsKeyDown(KEY_LEFT) && !tileSolid(player.x - 1, player.y)){ 
         player.currentSpeed -= player.acceleration;
         player.facingRight = false;
         moving = true;
     }
 
-    if(IsKeyDown(KEY_RIGHT) && !tileSolid(player.x - TILE_SIZE,player.y)){
+    if(IsKeyDown(KEY_RIGHT) && !tileSolid(player.x + TILE_SIZE,player.y)){
         player.currentSpeed += player.acceleration;
         player.facingRight = true;
         moving = true;
@@ -260,11 +225,9 @@ void playerInput(){
         player.speedY = -JUMP_FORCE;
         player.onGround = false;
     }
-    
 }
 
 void playerPhysics(){
-
     player.speedY += GRAVITY;
     player.y += player.speedY;
     if(tileSolid(player.x,player.y + TILE_SIZE)){
@@ -283,7 +246,6 @@ void drawPlayer() {
     DrawTexturePro(player.pTex, source, dest, (Vector2){0.0f,0.0f}, 0.0f, WHITE);
 }
 
-
 void platformerFrame(){
     BeginMode2D(camera);
     DrawLevel();
@@ -293,8 +255,8 @@ void platformerFrame(){
     drawPlayer();
     playerCamera();
     EndMode2D();
-
 }
+
 int main() {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(SCREEN_W, SCREEN_H, "Legally distinct mario maker");       
@@ -338,10 +300,7 @@ int main() {
                     }
                     break;
             }
-
-            
         EndTextureMode();
-        
 
         BeginDrawing();
             ClearBackground(BLACK);
