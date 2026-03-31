@@ -107,6 +107,9 @@ void placeTile(int tileX, int tileY, int tileID){
                     break;
             }
         }
+        if(tileID == 0 && tileX == flagPos.x && tileY == flagPos.y){
+            flagPos = (Vector2){-1,-1};
+        }
         worldMap[tileY][tileX] = tileID;
 }
 
@@ -141,7 +144,7 @@ bool editorFrame(Texture2D flagWarning) {
                 editing = false;
             }else{
                 warningFrames = 180;
-            }
+            }  
         }
         if(warningFrames > 0){
             EndMode2D();
@@ -201,12 +204,22 @@ void initPlayer(){
     player.facingRight = false;
 }
 
+
 #define GRAVITY 0.5f
 #define JUMP_FORCE 5.0f
 
 bool tileSolid(int x, int y){
     if(x / TILE_SIZE < 0 || x / TILE_SIZE >= WORLD_W || y / TILE_SIZE < 0 || y / TILE_SIZE >= WORLD_H) return true;
-    return blocks[worldMap[y /8][x /8]].solid;
+    return blocks[worldMap[y /8][x /8]].solid; 
+    //todo make it factor in coyote time
+}
+void playerCollision(){
+    //right collision
+    if(tileSolid(player.x + 8,player.y)){
+        player.x = ((player.x / TILE_SIZE) * TILE_SIZE) - 1;
+        player.currentSpeed = 0;
+        player.acceleration = 0;
+    } 
 }
 
 void playerCamera(){
@@ -250,6 +263,7 @@ void playerPhysics(){
     else{
         player.onGround = false;
     }
+    player.currentSpeed *=0.95;
 }
 
 void drawPlayer() {
@@ -265,6 +279,7 @@ void platformerFrame(){
     player.tileY = coordsToTile(player.y);
     playerPhysics();
     playerInput();
+    playerCollision();
     drawPlayer();
     playerCamera();
     EndMode2D();
@@ -311,7 +326,6 @@ int main() {
                     platformerFrame();
                     if(IsKeyPressed(KEY_E)){
                         currentState = EDITOR;
-                        flagPos = (Vector2){-1,-1};
                         editing = true;
                     }
                     break;
