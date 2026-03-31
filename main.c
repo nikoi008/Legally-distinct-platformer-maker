@@ -215,13 +215,26 @@ bool tileSolid(int x, int y){
 }
 void playerCollision(){
     //right collision
-    if(tileSolid(player.x + 8,player.y)){
-        player.x = ((player.x / TILE_SIZE) * TILE_SIZE) - 1;
+    if(tileSolid(player.x + 7,player.y)){
+        player.x = ((player.x / TILE_SIZE) * TILE_SIZE - 1);
         player.currentSpeed = 0;
-        player.acceleration = 0;
     } 
-}
+    if(tileSolid(player.x, player.y)){
+        player.x = (((player.x / TILE_SIZE) + 1)) * TILE_SIZE;
+        player.currentSpeed = 0;
 
+    }
+    if (tileSolid(player.x, player.y) || tileSolid(player.x + 7, player.y)) {
+            player.y = ((player.y / TILE_SIZE) + 1) * TILE_SIZE;
+            if (player.speedY < 0) player.speedY = 0;
+            }
+}
+bool canMoveRight(){
+    return !tileSolid(player.x + 8, player.y);
+}
+bool canMoveLeft(){
+    return !(tileSolid(player.x - 8, player.y));
+}
 void playerCamera(){
     Vector2 targetPos = (Vector2){ player.x + 4, player.y + 4}; 
     camera.target = Vector2Lerp(camera.target, targetPos, 0.1f);
@@ -233,13 +246,13 @@ int coordsToTile(int coord){
 
 void playerInput(){
     bool moving = false;  
-    if(IsKeyDown(KEY_LEFT) && !tileSolid(player.x - 1, player.y)){ 
+    if(IsKeyDown(KEY_LEFT) && canMoveLeft()){ 
         player.currentSpeed -= player.acceleration;
         player.facingRight = false;
         moving = true;
     }
 
-    if(IsKeyDown(KEY_RIGHT) && !tileSolid(player.x + TILE_SIZE,player.y)){
+    if(IsKeyDown(KEY_RIGHT) && canMoveRight()){
         player.currentSpeed += player.acceleration;
         player.facingRight = true;
         moving = true;
@@ -279,7 +292,7 @@ void platformerFrame(){
     player.tileY = coordsToTile(player.y);
     playerPhysics();
     playerInput();
-    playerCollision();
+   playerCollision();
     drawPlayer();
     playerCamera();
     EndMode2D();
