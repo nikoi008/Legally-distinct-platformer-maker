@@ -112,10 +112,27 @@ void placeTile(int tileX, int tileY, int tileID){
         }
         worldMap[tileY][tileX] = tileID;
 }
+void rectangleMode(Vector2 firstTilePos) {
+    Vector2 worldMouse = GetScreenToWorld2D(virtualMouse, camera);
+    int currentTileX = (int)(worldMouse.x / TILE_SIZE);
+    int currentTileY = (int)(worldMouse.y / TILE_SIZE);
 
+    
+    int topLeftX = (int)fminf(firstTilePos.x, (float)currentTileX);
+    int topLeftY = (int)fminf(firstTilePos.y, (float)currentTileY);
+    int bottomLeftX = (int)fmaxf(firstTilePos.x, (float)currentTileX);
+    int bottomLeftY = (int)fmaxf(firstTilePos.y, (float)currentTileY);
+    int width = (bottomLeftX - topLeftX + 1) * TILE_SIZE;
+    int height = (bottomLeftY - topLeftY + 1) * TILE_SIZE;
+    DrawRectangle(topLeftX * 8, topLeftY * 8, width, height, Fade(GREEN, 0.3f));
+    DrawRectangleLinesEx((Rectangle){ (float)(topLeftX * 8), (float)(topLeftY * 8), (float)width, (float)height }, 1, GREEN);
+}
 bool editing = true;
+bool rectangle = false;
 bool editorFrame(Texture2D flagWarning) {
     BeginMode2D(camera);
+    static bool initialMouse = false;
+    static Vector2 firstClickPos = {0,0};
     static int warningFrames = 0;
         for (int x = 0; x <= WORLD_W; x++) 
             DrawLine(x * TILE_SIZE, 0, x * TILE_SIZE, WORLD_H * TILE_SIZE, GRAY);
@@ -126,10 +143,27 @@ bool editorFrame(Texture2D flagWarning) {
         int mapY = (int)(worldMouse.y / TILE_SIZE);
 
         if (mapX >= 0 && mapX < WORLD_W && mapY >= 0 && mapY < WORLD_H) {
-            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !IsKeyDown(KEY_LEFT_SHIFT) && virtualMouse.y < SCREEN_H - 32) placeTile(mapX,mapY,currentTile);
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !IsKeyDown(KEY_LEFT_SHIFT) && virtualMouse.y < SCREEN_H - 32 && !rectangle) placeTile(mapX,mapY,currentTile);
             if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) worldMap[mapY][mapX] = 0;  
             DrawRectangleLines(mapX * TILE_SIZE, mapY * TILE_SIZE, TILE_SIZE, TILE_SIZE, BLUE); 
+            if (IsKeyPressed(KEY_R)) {
+                rectangle = !rectangle;
+                initialMouse = false; 
+            }
+            if (rectangle) {
+                if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+                    if (!initialMouse) {
+                        firstClickPos = (Vector2){(float)mapX, (float)mapY}; 
+                        initialMouse = true;
+                    }
+                    rectangleMode(firstClickPos);
+                } else {
+                    initialMouse = false; 
+                }
+            }
         }
+ 
+        
 
         for (int y = 0; y < WORLD_H; y++) {
             for (int x = 0; x < WORLD_W; x++) {
