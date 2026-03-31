@@ -31,6 +31,7 @@ void cameraInput() {
     }
 }  
 
+
 typedef struct
 {
     Texture2D sprite;
@@ -127,6 +128,20 @@ void rectangleMode(Vector2 firstTilePos) {
     DrawRectangle(topLeftX * 8, topLeftY * 8, width, height, Fade(GREEN, 0.3f));
     DrawRectangleLinesEx((Rectangle){ (float)(topLeftX * 8), (float)(topLeftY * 8), (float)width, (float)height }, 1, GREEN);
 }
+void fillRectangle(Vector2 startPoint, Vector2 endPoint,int tileId){
+    int xStart = fminf(startPoint.x,endPoint.x);
+    int yStart = fminf(startPoint.y,endPoint.y);
+    int xEnd = fmaxf(startPoint.x,endPoint.x);
+    int yEnd = fmaxf(startPoint.y,endPoint.y);
+    for(int y = yStart; y < yEnd; y++){
+        for(int x = xStart; x < xEnd; x++){
+            if (x >= 0 && x < WORLD_W && y >= 0 && y < WORLD_H){
+                placeTile(x,y,tileId);
+            }
+        }
+    }
+
+}
 bool editing = true;
 bool rectangle = false;
 bool editorFrame(Texture2D flagWarning) {
@@ -157,7 +172,8 @@ bool editorFrame(Texture2D flagWarning) {
                         initialMouse = true;
                     }
                     rectangleMode(firstClickPos);
-                } else {
+                } else if(initialMouse){
+                    fillRectangle(firstClickPos,(Vector2){(float)mapX, (float)mapY},currentTile);
                     initialMouse = false; 
                 }
             }
