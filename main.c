@@ -13,6 +13,7 @@ typedef enum { MENU, EDITOR, PLATFORMER} GameState;
 GameState currentState = MENU; 
 unsigned char worldMap[WORLD_H][WORLD_W] = { 0 }; 
 Camera2D camera = { 0 };
+bool redTileOn = false;
 Vector2 virtualMouse = { 0 };
 typedef struct{
     Texture2D pTex;
@@ -57,19 +58,24 @@ typedef struct
     bool coyoteTime; 
     bool isUnique;
     void (*ifTouched)(void);
+    bool showInEdtior;
 }block;
-#define TOTAL_BLOCKS 6
+#define TOTAL_BLOCKS 10
 block blocks[TOTAL_BLOCKS] = {0};
 Vector2 flagPos = {-1,-1};
 Vector2 endPos = {-1,-1};
 int currentTile = 1;
 
 void tileSelect() {
+    int blocksDrawn = 0;
     DrawRectangle(0, SCREEN_H - 32, SCREEN_W, 32, GRAY); 
     for (int i = 0; i < TOTAL_BLOCKS; i++) { 
-        float xPos = 8.0f + (i * 12.0f);
+        float xPos = 8.0f + (blocksDrawn * 12.0f);
         float yPos = SCREEN_H - 24.0f;
-        Rectangle tileHitbox = { xPos, yPos, 8, 8 };        
+        Rectangle tileHitbox = { xPos, yPos, 8, 8 }; 
+        if(!blocks[i].showInEdtior){
+            continue;
+        }
         DrawTexture(blocks[i].sprite, xPos, yPos, WHITE);
         if (currentTile == blocks[i].blockID) 
             DrawRectangleLinesEx((Rectangle){xPos-1, yPos-1, 10, 10}, 1, WHITE);
@@ -79,6 +85,7 @@ void tileSelect() {
                 currentTile = blocks[i].blockID;
             }
         }
+        blocksDrawn++;
     }
 }
 bool editing = true;
@@ -91,13 +98,15 @@ void dieScreen(){
     player.y = flagPos.y * 8;
     player.currentSpeed = 0;
 }
+
 void initBlocks(){
     Texture2D air = LoadTexture("air.png");
     blocks[0].sprite = air;    
     blocks[0].blockID = 0;
     blocks[0].solid = false;
     blocks[0].isUnique = false;
-    blocks[3].ifTouched = NULL;
+    blocks[0].ifTouched = NULL;
+    blocks[0].showInEdtior = true;
 
     Texture2D ground = LoadTexture("ground.png");       
     blocks[1].sprite = ground;  
@@ -105,7 +114,8 @@ void initBlocks(){
     blocks[1].solid = true;
     blocks[1].coyoteTime = true;
     blocks[1].isUnique = false;
-    blocks[3].ifTouched = NULL;
+    blocks[1].ifTouched = NULL;
+    blocks[1].showInEdtior = true;
 
     Texture2D brick = LoadTexture("brick.png");
     blocks[2].sprite = brick;
@@ -113,7 +123,8 @@ void initBlocks(){
     blocks[2].solid = true;
     blocks[2].coyoteTime = true;
     blocks[2].isUnique = false;
-    blocks[3].ifTouched = NULL;
+    blocks[2].ifTouched = NULL;
+    blocks[2].showInEdtior = true;
     
     Texture2D flag = LoadTexture("flag.png");
     blocks[3].sprite = flag;
@@ -122,6 +133,7 @@ void initBlocks(){
     blocks[3].coyoteTime = false;
     blocks[3].isUnique = true;
     blocks[3].ifTouched = NULL;
+    blocks[3].showInEdtior = true;
 
     Texture2D end = LoadTexture("end.png");
     blocks[4].sprite = end;
@@ -130,6 +142,7 @@ void initBlocks(){
     blocks[4].coyoteTime = false;
     blocks[4].isUnique = true;
     blocks[4].ifTouched = winScreen;
+    blocks[4].showInEdtior = true;
 
     Texture2D spike = LoadTexture("spike.png");
     blocks[5].sprite = spike;
@@ -138,6 +151,45 @@ void initBlocks(){
     blocks[5].coyoteTime = false;
     blocks[5].isUnique = false;
     blocks[5].ifTouched = dieScreen;
+    blocks[5].showInEdtior = true;
+
+    Texture2D cycleRedOn = LoadTexture("cbRed0.png");
+    blocks[6].sprite = cycleRedOn;
+    blocks[6].blockID = 6;
+    blocks[6].solid = true;
+    blocks[6].coyoteTime = true;
+    blocks[6].isUnique = false;
+    blocks[6].ifTouched = NULL;
+    blocks[6].showInEdtior = true;
+
+    Texture2D cycleRedOff = LoadTexture("cbRed1.png");
+    blocks[7].sprite = cycleRedOff;
+    blocks[7].blockID = 7;
+    blocks[7].solid = false;
+    blocks[7].coyoteTime = false;
+    blocks[7].isUnique = false;
+    blocks[7].ifTouched = NULL;
+    blocks[7].showInEdtior = false;
+
+    Texture2D cycleBlueOn = LoadTexture("cbBlue0.png");
+    blocks[8].sprite = cycleBlueOn;
+    blocks[8].blockID = 8;
+    blocks[8].solid = true;
+    blocks[8].coyoteTime = true;
+    blocks[8].isUnique = false;
+    blocks[8].ifTouched = NULL;
+    blocks[8].showInEdtior = true;
+    
+    Texture2D cycleBlueOff = LoadTexture("cbBlue1.png");
+    blocks[9].sprite = cycleBlueOff;
+    blocks[9].blockID = 9;
+    blocks[9].solid = false;
+    blocks[9].coyoteTime = false;
+    blocks[9].isUnique = false;
+    blocks[9].ifTouched = NULL;
+    blocks[9].showInEdtior = false;
+
+
     for(int i = 0; i < TOTAL_BLOCKS; i++){
         SetTextureFilter(blocks[i].sprite, TEXTURE_FILTER_POINT);
     }
@@ -267,7 +319,12 @@ void DrawLevel(){
         for (int x = 0; x < WORLD_W; x++) {
             int tileID = worldMap[y][x];
             if (tileID > 0 && tileID < TOTAL_BLOCKS) {
-                DrawTexture(blocks[tileID].sprite, x * TILE_SIZE, y * TILE_SIZE, WHITE);
+                Texture2D blockTexture = blocks[tileID].sprite;
+            if (tileID == 6 || tileID == 7) 
+                blockTexture = redTileOn ? blocks[6].sprite : blocks[7].sprite;
+            if (tileID == 8 || tileID == 9) 
+                blockTexture = redTileOn ? blocks[9].sprite : blocks[8].sprite;
+                DrawTexture(blockTexture, x * TILE_SIZE, y * TILE_SIZE, WHITE);
             }
         }
     }
@@ -298,17 +355,23 @@ void initPlayer(){
 #define GRAVITY 0.5f
 #define JUMP_FORCE 5.0f
 void callIfTouched(){
+    if(player.tileX< 0 || player.tileX>= WORLD_W || player.tileY < 0 || player.tileY >= WORLD_H){
+        dieScreen(); 
+        return;
+    }
     if(blocks[worldMap[player.tileY][player.tileX]].ifTouched != NULL){
         blocks[worldMap[player.tileY][player.tileX]].ifTouched();
     }
 } 
 bool tileSolid(int x, int y){
     if(x / TILE_SIZE < 0 || x / TILE_SIZE >= WORLD_W || y / TILE_SIZE < 0 || y / TILE_SIZE >= WORLD_H) return true;
-    return blocks[worldMap[y /8][x /8]].solid; 
+    int tileID = worldMap[y / TILE_SIZE][x /TILE_SIZE];
+    if(tileID == 6 || tileID == 7) return redTileOn;
+    if(tileID == 8 || tileID == 9) return !redTileOn;
+    return blocks[tileID].solid; 
     //todo make it factor in coyote time
 }
 void playerCollision(){
-    //right collision
     if(tileSolid(player.x + 7,player.y)){
         player.x = ((player.x / TILE_SIZE) * TILE_SIZE - 1);
         player.currentSpeed = 0;
@@ -371,9 +434,18 @@ void playerPhysics(){
     else{
         player.onGround = false;
     }
-    player.currentSpeed *=0.95;
+    player.currentSpeed *=0.93;
 }
-
+void updateCycleTiles(){
+    int cycleLength = 60;
+    static int cycleFrame = 0;
+    cycleFrame++;
+    if(cycleFrame >= cycleLength){
+        cycleFrame = 0;
+        redTileOn = !redTileOn;
+    }
+    
+}
 void drawPlayer() {
     Rectangle source = {0.0f,0.0f,(player.facingRight ? (float)player.pTex.width : -(float)player.pTex.width), (float)player.pTex.height};
     Rectangle dest = {player.x,player.y,(float)player.pTex.width,(float)(player.pTex.height)};
@@ -387,8 +459,9 @@ void platformerFrame(){
     player.tileY = coordsToTile(player.y);
     playerPhysics();
     playerInput();
-   playerCollision();
-   callIfTouched();
+    playerCollision();
+    callIfTouched();
+    updateCycleTiles();
     drawPlayer();
     playerCamera();
     EndMode2D();
