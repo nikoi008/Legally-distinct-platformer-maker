@@ -8,6 +8,7 @@
 #define WORLD_W 300
 #define WORLD_H 50
 #define TILE_SIZE 8
+#define PLAYER_HITBOX 7
 
 typedef enum { MENU, EDITOR, PLATFORMER} GameState;
 GameState currentState = MENU; 
@@ -15,7 +16,28 @@ unsigned char worldMap[WORLD_H][WORLD_W] = { 0 };
 Camera2D camera = { 0 };
 bool redTileOn = false;
 Vector2 virtualMouse = { 0 };
+Sound coinPickup;
 typedef struct{
+    int x;
+    int y;
+    bool left;
+}enemyHedgeHog;
+void drawBG(Texture2D tBackground) {
+    static int scrollX;
+    static int scrollY;
+    const int speed = 1;   
+    scrollX -= speed;
+    scrollY -= speed;
+    
+    if (scrollX <= -SCREEN_W) scrollX += SCREEN_W;
+    if (scrollY <= -SCREEN_H) scrollY += SCREEN_H;
+    
+    DrawTexture(tBackground, (int)scrollX, (int)scrollY, WHITE);
+    DrawTexture(tBackground, (int)scrollX + SCREEN_W, (int)scrollY, WHITE);
+    DrawTexture(tBackground, (int)scrollX, (int)scrollY + SCREEN_H, WHITE);
+    DrawTexture(tBackground, (int)scrollX + SCREEN_W, (int)scrollY + SCREEN_H, WHITE);
+}
+typedef struct{ 
     Texture2D pTex;
     int x;
     int y;
@@ -31,6 +53,7 @@ typedef struct{
     float currentSpeed;
     float speedY;
     bool onGround;
+    int coins;
 } playe;
 playe player = {0};
 void cameraInput() {
@@ -48,8 +71,6 @@ void cameraInput() {
         camera.zoom = Clamp(camera.zoom + wheel * 0.1f, 0.33f, 3.0f);
     }
 }  
-
-
 typedef struct
 {
     Texture2D sprite;
@@ -60,7 +81,7 @@ typedef struct
     void (*ifTouched)(void);
     bool showInEdtior;
 }block;
-#define TOTAL_BLOCKS 10
+#define TOTAL_BLOCKS 11
 block blocks[TOTAL_BLOCKS] = {0};
 Vector2 flagPos = {-1,-1};
 Vector2 endPos = {-1,-1};
@@ -98,7 +119,11 @@ void dieScreen(){
     player.y = flagPos.y * 8;
     player.currentSpeed = 0;
 }
-
+void collectCoin(){
+    PlaySound(coinPickup);
+    worldMap[player.tileY][player.tileX] = 0;
+    player.coins++;
+}
 void initBlocks(){
     Texture2D air = LoadTexture("air.png");
     blocks[0].sprite = air;    
@@ -188,6 +213,17 @@ void initBlocks(){
     blocks[9].isUnique = false;
     blocks[9].ifTouched = NULL;
     blocks[9].showInEdtior = false;
+
+    Texture2D coin = LoadTexture("coin.png");
+    blocks[10].sprite = coin;
+    blocks[10].blockID = 10;
+    blocks[10].solid = false;
+    blocks[10].coyoteTime = false;
+    blocks[10].isUnique = false;
+    blocks[10].ifTouched = collectCoin;
+    blocks[10].showInEdtior = true;
+
+    
 
 
     for(int i = 0; i < TOTAL_BLOCKS; i++){
@@ -348,19 +384,36 @@ void initPlayer(){
     player.sprinting = false;
     player.powerup = 0;
     player.facingRight = false;
+    player.coins = 0;
 
 }
 
 
 #define GRAVITY 0.5f
 #define JUMP_FORCE 5.0f
-void callIfTouched(){
-    if(player.tileX< 0 || player.tileX>= WORLD_W || player.tileY < 0 || player.tileY >= WORLD_H){
-        dieScreen(); 
-        return;
-    }
-    if(blocks[worldMap[player.tileY][player.tileX]].ifTouched != NULL){
-        blocks[worldMap[player.tileY][player.tileX]].ifTouched();
+int coordsToTile(int coord){
+    return coord / 8;
+}
+void callIfTouched() {
+    int left   = coordsToTile(player.x);
+    int right  = coordsToTile(player.x + PLAYER_HITBOX - 1);
+    int top    = coordsToTile(player.y);
+    int bottom = coordsToTile(player.y + PLAYER_HITBOX - 1);
+
+    for (int y = top; y <= bottom; y++) {
+        for (int x = left; x <= right; x++) {
+            if (x < 0 || x >= WORLD_W || y < 0 || y >= WORLD_H) {
+                dieScreen();
+                return;
+            }
+
+            int tileID = worldMap[y][x];
+            if (blocks[tileID].ifTouched != NULL) {
+                player.tileX = x;
+                player.tileY = y;
+                blocks[tileID].ifTouched();
+            }
+        }
     }
 } 
 bool tileSolid(int x, int y){
@@ -369,23 +422,14 @@ bool tileSolid(int x, int y){
     if(tileID == 6 || tileID == 7) return redTileOn;
     if(tileID == 8 || tileID == 9) return !redTileOn;
     return blocks[tileID].solid; 
-    //todo make it factor in coyote time
 }
-void playerCollision(){
-    if(tileSolid(player.x + 7,player.y)){
-        player.x = ((player.x / TILE_SIZE) * TILE_SIZE - 1);
-        player.currentSpeed = 0;
-    } 
-    if(tileSolid(player.x, player.y)){
-        player.x = (((player.x / TILE_SIZE) + 1)) * TILE_SIZE;
-        player.currentSpeed = 0;
-
-    }
-    if (tileSolid(player.x, player.y) || tileSolid(player.x + 7, player.y)) {
-            player.y = ((player.y / TILE_SIZE) + 1) * TILE_SIZE;
-            
-            if (player.speedY < 0) player.speedY = 0;
-            }
+bool playerCollision(int x, int y){
+    int left = x / TILE_SIZE;
+    int right = (x + PLAYER_HITBOX - 1) / TILE_SIZE;
+    int top = y / TILE_SIZE;
+    int bottom = (y + PLAYER_HITBOX - 1) / TILE_SIZE;
+    return tileSolid(left * TILE_SIZE, top * TILE_SIZE) || tileSolid(right * TILE_SIZE, top * TILE_SIZE) ||
+           tileSolid(left * TILE_SIZE, bottom * TILE_SIZE) || tileSolid(right * TILE_SIZE, bottom * TILE_SIZE);
 }
 bool canMoveRight(){
     return !tileSolid(player.x + 8, player.y);
@@ -398,43 +442,79 @@ void playerCamera(){
     camera.target = Vector2Lerp(camera.target, targetPos, 0.1f);
 }
 
-int coordsToTile(int coord){
-    return coord / 8;
-}
 
-void playerInput(){
-    bool moving = false;  
-    if(IsKeyDown(KEY_LEFT) && canMoveLeft()){ 
+
+
+int coyoteFrame = 0;   
+#define COYOTE_FRAMES 6
+void playerInput() {
+    if (IsKeyDown(KEY_LEFT)) {
         player.currentSpeed -= player.acceleration;
         player.facingRight = false;
-        moving = true;
     }
-
-    if(IsKeyDown(KEY_RIGHT) && canMoveRight()){
+    if (IsKeyDown(KEY_RIGHT)) {
         player.currentSpeed += player.acceleration;
         player.facingRight = true;
-        moving = true;
     }
-    player.currentSpeed = Clamp(player.currentSpeed,-player.maxSpeed,player.maxSpeed);
-    player.x += (int)player.currentSpeed;
-    if(IsKeyDown(KEY_SPACE) && player.onGround){
-        player.speedY = -JUMP_FORCE;
-        player.onGround = false;
+
+
+    if (IsKeyPressed(KEY_SPACE)) {
+        if (player.onGround || coyoteFrame < COYOTE_FRAMES) {
+            player.speedY = -JUMP_FORCE;
+            player.onGround = false;
+            coyoteFrame = COYOTE_FRAMES; 
+        }
     }
+    
+    player.currentSpeed = Clamp(player.currentSpeed, -player.maxSpeed, player.maxSpeed);
 }
 
-void playerPhysics(){
+#define PLAYER_SIZE 7
+
+
+bool checkCollision(float x, float y) {
+    int left = (int)x / TILE_SIZE;
+    int right = (int)(x + PLAYER_SIZE - 1) / TILE_SIZE;
+    int top = (int)y / TILE_SIZE;
+    int bottom = (int)(y + PLAYER_SIZE - 1) / TILE_SIZE;
+
+    
+    if (left < 0 || right >= WORLD_W || top < 0 || bottom >= WORLD_H) return true;
+    return tileSolid(left * TILE_SIZE, top * TILE_SIZE) ||
+           tileSolid(right * TILE_SIZE, top * TILE_SIZE) ||
+           tileSolid(left * TILE_SIZE, bottom * TILE_SIZE) ||
+           tileSolid(right * TILE_SIZE, bottom * TILE_SIZE);
+}
+
+void playerPhysics() {
+    player.x += player.currentSpeed;
+    if (checkCollision(player.x, player.y)) {
+        if (player.currentSpeed > 0) 
+            player.x = (floorf((player.x + PLAYER_SIZE - 1) / TILE_SIZE) * TILE_SIZE) - PLAYER_SIZE;
+        else if (player.currentSpeed < 0) 
+            player.x = (floorf(player.x / TILE_SIZE) + 1) * TILE_SIZE;
+        player.currentSpeed = 0;
+    }
+
     player.speedY += GRAVITY;
     player.y += player.speedY;
-    if(tileSolid(player.x,player.y + TILE_SIZE)){
-        player.y = (player.y / TILE_SIZE) * TILE_SIZE;
+    
+    player.onGround = false;
+    if (checkCollision(player.x, player.y)) {
+        if (player.speedY > 0) {
+            player.y = (floorf((player.y + PLAYER_SIZE - 1) / TILE_SIZE) * TILE_SIZE) - PLAYER_SIZE;
+            player.onGround = true;
+            coyoteFrame= 0;
+        } 
+        else if (player.speedY < 0) {  
+            player.y = (floorf(player.y / TILE_SIZE)  + 1) * TILE_SIZE;
+        }                    
         player.speedY = 0;
-        player.onGround = true;
+    } else {
+        coyoteFrame++;
     }
-    else{
-        player.onGround = false;
-    }
-    player.currentSpeed *=0.93;
+
+    player.currentSpeed *= 0.93f; 
 }
 void updateCycleTiles(){
     int cycleLength = 60;
@@ -448,7 +528,7 @@ void updateCycleTiles(){
 }
 void drawPlayer() {
     Rectangle source = {0.0f,0.0f,(player.facingRight ? (float)player.pTex.width : -(float)player.pTex.width), (float)player.pTex.height};
-    Rectangle dest = {player.x,player.y,(float)player.pTex.width,(float)(player.pTex.height)};
+    Rectangle dest = {player.x,player.y - 1,(float)player.pTex.width,(float)(player.pTex.height)};
     DrawTexturePro(player.pTex, source, dest, (Vector2){0.0f,0.0f}, 0.0f, WHITE);
 }
 
@@ -459,7 +539,7 @@ void platformerFrame(){
     player.tileY = coordsToTile(player.y);
     playerPhysics();
     playerInput();
-    playerCollision();
+    playerCollision(player.x,player.y);
     callIfTouched();
     updateCycleTiles();
     drawPlayer();
@@ -472,12 +552,15 @@ int main() {
     InitWindow(SCREEN_W, SCREEN_H, "Legally distinct mario maker");       
     SetTargetFPS(60);
     initBlocks();
+    InitAudioDevice();
     currentState = MENU;             
     camera.zoom = 1.0f;
     RenderTexture2D window = LoadRenderTexture(SCREEN_W, SCREEN_H);
     player.pTex = LoadTexture("player.png");
     Texture2D flagWarning = LoadTexture("flag_warning.png");
-
+    coinPickup = LoadSound("pickupCoin.wav");
+    Texture2D bg = LoadTexture("bg.png");
+     SetTextureFilter(bg, TEXTURE_FILTER_POINT);
     SetTextureFilter(window.texture, TEXTURE_FILTER_POINT);
     while (!WindowShouldClose()) {
         float scale = fminf((float)GetScreenWidth()/SCREEN_W, (float)GetScreenHeight()/SCREEN_H);
@@ -495,6 +578,7 @@ int main() {
                 case(MENU):
                     DrawText("Menu", 110, 110, 10, DARKGRAY); 
                     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) currentState = EDITOR;
+                    drawBG(bg);
                     break;
                 case(EDITOR):
                     if(editorFrame(flagWarning)){
@@ -521,7 +605,7 @@ int main() {
             DrawTexturePro(window.texture, source, dest, (Vector2){0,0}, 0.0f, WHITE);
         EndDrawing();
     }
-
+    CloseAudioDevice();
     UnloadRenderTexture(window);
     CloseWindow();
     return 0; 
