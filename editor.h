@@ -8,5 +8,6 @@ void tileSelect();
 bool editorFrame(Texture2D flagWarning);
 void rectangleMode(Vector2 firstTilePos);
 void fillRectangle(Vector2 startPoint, Vector2 endPoint, int tileId);
+bool drawbuttonTopRight(Texture2D sprite);
 
 #endif
