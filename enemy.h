@@ -2,11 +2,20 @@
 #define ENEMY_H
 
 #include "globals.h"
-
+#define HEDGEHOG_SPEED 0.5f
 typedef struct {
-    int x;
-    int y;
+    float x;
+    float y;
     bool left;
-} enemyHedgeHog;
+    bool active;
+} enemyHedgehog;
 float important_hedgehog_meaning_of_life( float number );
+extern enemyHedgehog* hedgehogs;
+extern int hedgehogCount;
+extern int currentMaxHedgehog;
+
+void addHedgehog(float x, float y);
+void updateHedgehog();
+void drawHedgehog();
+void clearHedgehog();
 #endif

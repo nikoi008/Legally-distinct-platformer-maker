@@ -3,7 +3,7 @@
 #include "raymath.h"
 #include <math.h>
 #include <stdlib.h>
-
+#include "enemy.h"
 #define GRAVITY 0.5f
 #define JUMP_FORCE 5.0f
 #define PLAYER_SIZE 7
@@ -30,6 +30,15 @@ void initPlayer() {
     player.powerup = 0;
     player.facingRight = false;
     player.coins = 0;
+    clearHedgehog();
+    for (int y = 0; y < WORLD_H; y++) {
+        for (int x = 0; x < WORLD_W; x++) {
+            if (worldMap[y][x] == 11) {
+                addHedgehog(x * TILE_SIZE, y * TILE_SIZE); //todo make it reset on screen when playing but keep in editor
+                worldMap[y][x] = 0; 
+            }
+        }
+    }
 }
 
 void winScreen() {
@@ -136,10 +145,9 @@ void playerPhysics() {
 
 void drawPlayer() {
     Rectangle source = { 0.0f,0.0,(player.facingRight ? (float)player.pTex.width : -(float)player.pTex.width), (float)player.pTex.height };
-    Rectangle dest = { player.x,player.y - 1,(float)player.pTex.width,(float)(player.pTex.height) };
+    Rectangle dest = { player.x,player.y - 1,(float)player.pTex.width,(float)(player.pTex.height) - 8};
     DrawTexturePro(player.pTex, source, dest, (Vector2){ 0.0f,0.0f }, 0.0f, WHITE);
 }
-
 void playerCamera() {
     Vector2 targetPos = (Vector2){ player.x + 4, player.y + 4 };
     camera.target = Vector2Lerp(camera.target, targetPos, 0.1f);

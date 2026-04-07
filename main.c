@@ -4,7 +4,7 @@
 #include "editor.h"
 #include <stdio.h>
 #include <math.h>
-
+#include "enemy.h"
 GameState currentState = MENU;
 Camera2D camera = { 0 };
 Vector2 virtualMouse = { 0 };
@@ -27,6 +27,8 @@ void drawBG(Texture2D tBackground) {
 void platformerFrame() {
     BeginMode2D(camera);
     DrawLevel();
+    updateHedgehog();
+    drawHedgehog();
     player.tileX = coordsToTile(player.x);
     player.tileY = coordsToTile(player.y);
     playerPhysics();

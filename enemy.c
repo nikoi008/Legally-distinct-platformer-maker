@@ -1,5 +1,8 @@
 #include "enemy.h"
-
+#include <stdlib.h>
+#include <stdio.h>
+#include "player.h"
+#include "blocks.h"
 float important_hedgehog_meaning_of_life( float number )
 {
 	long i;
@@ -15,4 +18,55 @@ float important_hedgehog_meaning_of_life( float number )
 
 
 	return y;
+}
+enemyHedgehog* hedgehogs = NULL;
+int hedgehogCount = 0;
+int currentMaxHedgehog = 0;
+void addHedgehog(float x, float y){
+	if(hedgehogCount >= currentMaxHedgehog){
+		currentMaxHedgehog = (currentMaxHedgehog == 0) ? 4 : currentMaxHedgehog * 2;
+		hedgehogs = realloc(hedgehogs,sizeof(enemyHedgehog) * currentMaxHedgehog);
+	}
+	hedgehogs[hedgehogCount].x = x;
+    hedgehogs[hedgehogCount].y = y;
+    hedgehogs[hedgehogCount].left = true;
+    hedgehogs[hedgehogCount].active = true;
+    hedgehogCount++;
+}
+void clearHedgehog(){
+	if(hedgehogs != NULL){
+		free(hedgehogs);
+		hedgehogs = NULL;
+	}
+	hedgehogCount = 0;
+	currentMaxHedgehog = 0;
+}
+void updateHedgehog(){
+    for (int i = 0; i < hedgehogCount; i++) {
+        if (!hedgehogs[i].active) continue;
+
+        float moveDir = hedgehogs[i].left ? -HEDGEHOG_SPEED : HEDGEHOG_SPEED;
+        float hedgeX = hedgehogs[i].x + moveDir;
+
+        if (tileSolid(hedgeX + (hedgehogs[i].left ? 0 : 7), hedgehogs[i].y + 4)) {
+            hedgehogs[i].left = !hedgehogs[i].left;
+        } else {
+            hedgehogs[i].x = hedgeX;
+        }
+        if (!tileSolid(hedgehogs[i].x, hedgehogs[i].y + 8) && !tileSolid(hedgehogs[i].x + 7, hedgehogs[i].y + 8)) {
+            hedgehogs[i].y += 1.0f;
+        }
+        Rectangle hedgehogRect = { hedgehogs[i].x, hedgehogs[i].y, 8, 8 };
+        Rectangle playerRect = { player.x, player.y, PLAYER_HITBOX, PLAYER_HITBOX };
+        if (CheckCollisionRecs(hedgehogRect, playerRect)) {
+            dieScreen();
+        }
+    }
+}
+void drawHedgehog(){
+    for (int i = 0; i < hedgehogCount; i++) {
+        if (hedgehogs[i].active) { //todo left and right mirroring
+            DrawTexture(blocks[11].sprite, (int)hedgehogs[i].x, (int)hedgehogs[i].y, WHITE);
+        }
+    }
 }
