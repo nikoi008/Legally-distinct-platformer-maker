@@ -147,7 +147,7 @@ bool editorFrame(Texture2D flagWarning) {
             }
         }
     }
-
+    EndMode2D();
     if (IsKeyPressed(KEY_P) || drawbuttonTopRight(play)) {
         if (flagPos.x != -1) {
             editing = false;
@@ -156,6 +156,7 @@ bool editorFrame(Texture2D flagWarning) {
             warningFrames = 180;
         }
     }
+    BeginMode2D(camera);
 
     if (warningFrames > 0) {
         EndMode2D();
