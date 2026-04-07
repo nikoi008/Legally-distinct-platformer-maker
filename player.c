@@ -145,7 +145,7 @@ void playerPhysics() {
 
 void drawPlayer() {
     Rectangle source = { 0.0f,0.0,(player.facingRight ? (float)player.pTex.width : -(float)player.pTex.width), (float)player.pTex.height };
-    Rectangle dest = { player.x,player.y - 1,(float)player.pTex.width,(float)(player.pTex.height) - 8};
+    Rectangle dest = { player.x,player.y - 1,(float)player.pTex.width,(float)(player.pTex.height)};
     DrawTexturePro(player.pTex, source, dest, (Vector2){ 0.0f,0.0f }, 0.0f, WHITE);
 }
 void playerCamera() {

@@ -36,5 +36,6 @@ extern Vector2 flagPos;
 extern Vector2 endPos;
 extern int currentTile;
 extern bool editing;
-
+extern Texture2D play;
+extern Texture2D trash;
 #endif

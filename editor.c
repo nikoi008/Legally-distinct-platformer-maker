@@ -9,7 +9,15 @@ bool editing = true;
 bool mouseOverUi() {
     return (virtualMouse.y >= SCREEN_H - 32);
 }
+bool drawbuttonTopRight(Texture2D sprite){
+    float x = (float)(SCREEN_W - sprite.width - 5);
+    float y = (float)5;
 
+    Rectangle spriteRec = { x, y, (float)sprite.width, (float)sprite.height };
+    bool hovered = CheckCollisionPointRec(virtualMouse, spriteRec);
+    DrawTexture(sprite, (int)x, (int)y, hovered ? Fade(WHITE, 0.6f) : WHITE);
+    return (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON));
+}
 void cameraInput() {
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && IsKeyDown(KEY_LEFT_SHIFT)) {
         Vector2 delta = GetMouseDelta();
@@ -46,6 +54,9 @@ void tileSelect() {
             }
         }
         blocksDrawn++;
+        if( i ==0){
+            DrawTexture(trash,xPos,yPos,WHITE);
+        }
     }
 }
 
@@ -137,7 +148,7 @@ bool editorFrame(Texture2D flagWarning) {
         }
     }
 
-    if (IsKeyPressed(KEY_P)) {
+    if (IsKeyPressed(KEY_P) || drawbuttonTopRight(play)) {
         if (flagPos.x != -1) {
             editing = false;
         }
@@ -152,6 +163,7 @@ bool editorFrame(Texture2D flagWarning) {
         warningFrames--;
         BeginMode2D(camera);
     }
+
 
     EndMode2D();
     return editing;
