@@ -7,7 +7,7 @@ bool rectangle = false;
 bool editing = true;
 
 bool mouseOverUi() {
-    return (virtualMouse.y >= SCREEN_H - 32);
+    return (virtualMouse.y >= SCREEN_H - 32) || (virtualMouse.x >= SCREEN_W - 40 && virtualMouse.y <= 40);
 }
 bool drawbuttonTopRight(Texture2D sprite){
     float x = (float)(SCREEN_W - sprite.width - 5);
@@ -156,16 +156,12 @@ bool editorFrame(Texture2D flagWarning) {
             warningFrames = 180;
         }
     }
-    BeginMode2D(camera);
 
     if (warningFrames > 0) {
-        EndMode2D();
         DrawTexture(flagWarning, SCREEN_W - flagWarning.width, 0, WHITE);
         warningFrames--;
-        BeginMode2D(camera);
     }
 
 
-    EndMode2D();
     return editing;
 }

@@ -65,8 +65,10 @@ void updateHedgehog(){
 }
 void drawHedgehog(){
     for (int i = 0; i < hedgehogCount; i++) {
-        if (hedgehogs[i].active) { //todo left and right mirroring
-            DrawTexture(blocks[11].sprite, (int)hedgehogs[i].x, (int)hedgehogs[i].y, WHITE);
+        if (hedgehogs[i].active) {
+            Rectangle source = { 0.0f,0.0f, (hedgehogs[i].left ? (float)blocks[11].sprite.width :  -(float)blocks[11].sprite.width),(float)blocks[11].sprite.height};
+            Rectangle dest = { hedgehogs[i].x,hedgehogs[i].y,(float)blocks[11].sprite.width,(float)blocks[11].sprite.height};
+            DrawTexturePro(blocks[11].sprite, source, dest, (Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
         }
     }
 }

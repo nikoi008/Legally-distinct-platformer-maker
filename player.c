@@ -93,11 +93,11 @@ bool checkCollision(float x, float y) {
 }
 
 void playerInput() {
-    if (IsKeyDown(KEY_LEFT)) {
+    if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
         player.currentSpeed -= player.acceleration;
         player.facingRight = false;
     }
-    if (IsKeyDown(KEY_RIGHT)) {
+    if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
         player.currentSpeed += player.acceleration;
         player.facingRight = true;
     }
