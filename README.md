@@ -1,5 +1,5 @@
 # Legally-distinct-platformer-maker
-
+https://nikoi008.github.io/Legally-distinct-platformer-maker/
 # About
 Legally-distinct-platformer maker is a mario maker inspired game with a custom platforming,enemy,collision and tiling engine I made with C and raylib for the graphics, sound and input. It currently features 8 different blocks and 1 enemy, as well as a level editor that is intuitive and fast to prototype, with shortcuts and tools such as rectangle fill, along with an 8x8 charm.
 
