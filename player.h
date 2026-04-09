@@ -5,8 +5,8 @@
 
 typedef struct {
     Texture2D pTex;
-    int x;
-    int y;
+    float x;
+    float y;
     int tileX;
     int tileY;
     float acceleration;

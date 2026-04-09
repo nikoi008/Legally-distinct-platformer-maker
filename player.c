@@ -22,12 +22,12 @@ void initPlayer() {
     player.tileX = flagPos.x;
     player.tileY = flagPos.y;
     player.acceleration = 0.2f;
-    player.maxSpeed = 3.0f;
+    player.maxSpeed = 1.75f;
     player.currentSpeed = 0.0f;
-    player.jumping = false;
-    player.falling = false;
-    player.sprinting = false;
-    player.powerup = 0;
+    //player.jumping = false;
+    //player.falling = false;
+    //player.sprinting = false; remove?
+    player.powerup = 0; //implement in future?
     player.facingRight = false;
     player.coins = 0;
     clearHedgehog();
@@ -53,7 +53,7 @@ void dieScreen() {
 }
 
 int coordsToTile(int coord) {
-    return coord / 8;
+    return (int)coord / 8;
 }
 
 void callIfTouched() {
@@ -78,7 +78,7 @@ void callIfTouched() {
         }
     }
 }
-
+ 
 bool checkCollision(float x, float y) {
     int left = (int)x / TILE_SIZE;
     int right = (int)(x + PLAYER_SIZE - 1) / TILE_SIZE;
@@ -91,25 +91,40 @@ bool checkCollision(float x, float y) {
         tileSolid(left * TILE_SIZE, bottom * TILE_SIZE) ||
         tileSolid(right * TILE_SIZE, bottom * TILE_SIZE);
 }
+#define PLAYER_FRITCION 0.1f
 
 void playerInput() {
+    bool moving = false;
     if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
         player.currentSpeed -= player.acceleration;
         player.facingRight = false;
+        moving = true;
     }
     if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
         player.currentSpeed += player.acceleration;
         player.facingRight = true;
+        moving = true;
     }
-
+    if (!moving) {
+        if (player.currentSpeed > 0) {
+            player.currentSpeed -=PLAYER_FRITCION;
+            if (player.currentSpeed < 0) player.currentSpeed = 0; 
+        }
+        else if (player.currentSpeed < 0) {
+            player.currentSpeed += PLAYER_FRITCION;
+            if(player.currentSpeed > 0) player.currentSpeed = 0;    
+        }
+    }
     if (IsKeyPressed(KEY_SPACE)) {
         if (player.onGround || coyoteFrame < COYOTE_FRAMES) {
             player.speedY = -JUMP_FORCE;
             player.onGround = false;
             coyoteFrame = COYOTE_FRAMES;
+            //moving???
         }
     }
     player.currentSpeed = Clamp(player.currentSpeed, -player.maxSpeed, player.maxSpeed);
+    
 }
 
 void playerPhysics() {
@@ -140,7 +155,7 @@ void playerPhysics() {
     else {
         coyoteFrame++;
     }
-    player.currentSpeed *= 0.93f;
+    //player.currentSpeed *= 0.93f;
 }
 
 void drawPlayer() {

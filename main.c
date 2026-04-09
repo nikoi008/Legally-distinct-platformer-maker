@@ -76,6 +76,9 @@ int main() {
     SetTextureFilter(window.texture, TEXTURE_FILTER_POINT);
     Texture2D start = LoadTexture("sprites/menu/start.png");
     trash = LoadTexture("sprites/blocks/trash.png");
+    for(int i = 0; i < WORLD_W; i++){
+        worldMap[49][i] = 5;
+    }
     while (!WindowShouldClose()) {
         float scale = fminf((float)GetScreenWidth() / SCREEN_W, (float)GetScreenHeight() / SCREEN_H);
         Vector2 mouse = GetMousePosition();
