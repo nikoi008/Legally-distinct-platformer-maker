@@ -2,7 +2,7 @@
 #include "blocks.h"
 #include "raymath.h"
 #include <math.h>
-
+#include "player.h"
 bool rectangle = false;
 bool editing = true;
 
@@ -95,7 +95,6 @@ bool editorFrame(Texture2D flagWarning) {
     static int warningFrames = 0;
 
     BeginMode2D(camera);
-    
     for (int x = 0; x <= WORLD_W; x++)
         DrawLine(x * TILE_SIZE, 0, x * TILE_SIZE, WORLD_H * TILE_SIZE, GRAY);
     for (int y = 0; y <= WORLD_H; y++)
@@ -133,6 +132,7 @@ bool editorFrame(Texture2D flagWarning) {
             }
         }
         DrawRectangleLines(mapX * TILE_SIZE, mapY * TILE_SIZE, TILE_SIZE, TILE_SIZE, BLUE);
+        DrawTexture(blocks[currentTile].sprite,mapX * TILE_SIZE, mapY * TILE_SIZE,Fade(WHITE,0.2));
     } else {
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             initialMouse = false;

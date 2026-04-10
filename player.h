@@ -32,6 +32,8 @@ void playerPhysics();
 void drawPlayer();
 void playerCamera();
 void callIfTouched();
-int coordsToTile(int coord);
+static inline int coordsToTile(int coord) {
+    return coord >> 3; // funky dunky bit shift
+}
 
 #endif

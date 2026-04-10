@@ -156,7 +156,7 @@ void placeTile(int tileX, int tileY, int tileID) {
     }
     worldMap[tileY][tileX] = tileID;
 }
-
+/*
 void DrawLevel() {
     for (int y = 0; y < WORLD_H; y++) {
         for (int x = 0; x < WORLD_W; x++) {
@@ -168,6 +168,28 @@ void DrawLevel() {
                 if (tileID == 8 || tileID == 9)
                     blockTexture = redTileOn ? blocks[9].sprite : blocks[8].sprite;
                 DrawTexture(blockTexture, x * TILE_SIZE, y * TILE_SIZE, WHITE);
+            }
+        }
+    }
+}*/
+
+void DrawLevel() {
+    int closestX = (int)((camera.target.x - (SCREEN_W / 2.0f)) / TILE_SIZE) - 1;
+    int furthestX = (int)((camera.target.x + (SCREEN_W / 2.0f)) / TILE_SIZE) + 1;
+    if (closestX < 0) closestX = 0;
+    if (furthestX >= WORLD_W) furthestX = WORLD_W - 1;
+    for (int y = 0; y < WORLD_H; y++) {
+        for (int x = closestX; x <= furthestX; x++) {
+            int tileID = worldMap[y][x];
+            if (tileID > 0 && tileID < TOTAL_BLOCKS) {
+                Texture2D blockTexture = blocks[tileID].sprite;
+                if (tileID == 6 || tileID == 7) {
+                    blockTexture = redTileOn ? blocks[6].sprite : blocks[7].sprite;
+                }
+                if (tileID == 8 || tileID == 9) {
+                    blockTexture = redTileOn ? blocks[9].sprite : blocks[8].sprite;
+                }
+                DrawTexture(blockTexture, x * 8, y * 8 , WHITE); 
             }
         }
     }

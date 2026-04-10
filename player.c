@@ -52,9 +52,6 @@ void dieScreen() {
     player.currentSpeed = 0;
 }
 
-int coordsToTile(int coord) {
-    return (int)coord / 8;
-}
 
 void callIfTouched() {
     int left = coordsToTile(player.x);
@@ -126,7 +123,6 @@ void playerInput() {
     player.currentSpeed = Clamp(player.currentSpeed, -player.maxSpeed, player.maxSpeed);
     
 }
-
 void playerPhysics() {
     player.x += player.currentSpeed;
     if (checkCollision(player.x, player.y)) {
@@ -137,8 +133,10 @@ void playerPhysics() {
         player.currentSpeed = 0;
     }
 
-    player.speedY += GRAVITY;
+    if (!player.onGround) {
+        player.speedY += GRAVITY;
     player.y += player.speedY;
+    }
 
     player.onGround = false;
     if (checkCollision(player.x, player.y)) {
@@ -155,7 +153,12 @@ void playerPhysics() {
     else {
         coyoteFrame++;
     }
-    //player.currentSpeed *= 0.93f;
+if (!player.onGround) {
+    if (checkCollision(player.x, player.y + 1)) {
+        player.onGround = true;
+        coyoteFrame = 0;
+    }
+}
 }
 
 void drawPlayer() {
@@ -164,6 +167,6 @@ void drawPlayer() {
     DrawTexturePro(player.pTex, source, dest, (Vector2){ 0.0f,0.0f }, 0.0f, WHITE);
 }
 void playerCamera() {
-    Vector2 targetPos = (Vector2){ player.x + 4, player.y + 4 };
+    Vector2 targetPos = (Vector2){ floorf(player.x + 4), floorf(player.y + 4) };
     camera.target = Vector2Lerp(camera.target, targetPos, 0.1f);
 }
