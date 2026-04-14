@@ -18,4 +18,20 @@ void addHedgehog(float x, float y);
 void updateHedgehog();
 void drawHedgehog();
 void clearHedgehog();
+
+typedef struct {
+    float x;
+    float y;
+    bool left;
+} movingPad;
+
+extern movingPad* pads;
+extern int padCount;
+extern int currentMaxPad;
+
+void addPad(float x, float y);
+void updatePad();
+void drawPad();
+void clearPad();
+bool padSolid(float x, float y);
 #endif

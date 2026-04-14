@@ -44,6 +44,8 @@ void platformerFrame() {
     DrawLevel();
     updateHedgehog();
     drawHedgehog();
+    updatePad();
+    drawPad();
     player.tileX = coordsToTile(player.x);
     player.tileY = coordsToTile(player.y);
     playerPhysics();

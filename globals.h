@@ -9,7 +9,7 @@
 #define WORLD_H 50
 #define TILE_SIZE 8
 #define PLAYER_HITBOX 7
-#define TOTAL_BLOCKS 12
+#define TOTAL_BLOCKS 13
 
 typedef enum { MENU, EDITOR, PLATFORMER } GameState;
 

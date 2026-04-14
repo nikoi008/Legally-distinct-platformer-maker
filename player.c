@@ -17,7 +17,7 @@ void initPlayer() {
     camera.offset = (Vector2){ SCREEN_W / 2.0f, SCREEN_H / 2.0f };
     camera.zoom = 1.0f;
     player.x = flagPos.x * 8;
-    player.y = flagPos.y * 8;
+    player.y = (flagPos.y * 8) - 7;
     camera.target = (Vector2){ player.x + 4,player.y + 4 };
     player.tileX = flagPos.x;
     player.tileY = flagPos.y;
@@ -39,6 +39,15 @@ void initPlayer() {
             }
         }
     }
+    clearPad();
+    for (int y = 0; y < WORLD_H; y++) {
+        for (int x = 0; x < WORLD_W; x++) {
+            if (worldMap[y][x] == 12) {
+                addPad(x * TILE_SIZE, y * TILE_SIZE);
+                worldMap[y][x] = 0;
+            }
+        }
+}
 }
 
 void winScreen() {
@@ -48,8 +57,9 @@ void winScreen() {
 
 void dieScreen() {
     player.x = flagPos.x * 8;
-    player.y = flagPos.y * 8;
+    player.y = (flagPos.y * 8) - 7;
     player.currentSpeed = 0;
+    player.speedY = 0;
 }
 
 
@@ -83,10 +93,17 @@ bool checkCollision(float x, float y) {
     int bottom = (int)(y + PLAYER_SIZE - 1) / TILE_SIZE;
 
     if (left < 0 || right >= WORLD_W || top < 0 || bottom >= WORLD_H) return true;
-    return tileSolid(left * TILE_SIZE, top * TILE_SIZE) ||
-        tileSolid(right * TILE_SIZE, top * TILE_SIZE) ||
-        tileSolid(left * TILE_SIZE, bottom * TILE_SIZE) ||
-        tileSolid(right * TILE_SIZE, bottom * TILE_SIZE);
+
+    if (tileSolid(left * TILE_SIZE, top * TILE_SIZE)   ||
+        tileSolid(right * TILE_SIZE, top * TILE_SIZE)  ||
+        tileSolid(left * TILE_SIZE, bottom * TILE_SIZE)||
+        tileSolid(right * TILE_SIZE, bottom * TILE_SIZE))
+        return true;
+
+    return padSolid(x,y) ||
+           padSolid(x + PLAYER_SIZE - 1, y) ||
+           padSolid(x,y + PLAYER_SIZE - 1) ||
+           padSolid(x + PLAYER_SIZE - 1, y + PLAYER_SIZE - 1);
 }
 #define PLAYER_FRITCION 0.1f
 
@@ -133,10 +150,10 @@ void playerPhysics() {
         player.currentSpeed = 0;
     }
 
-    if (!player.onGround) {
-        player.speedY += GRAVITY;
+    if (!player.onGround) player.speedY += GRAVITY;
+    else player.speedY = 0;
+
     player.y += player.speedY;
-    }
 
     player.onGround = false;
     if (checkCollision(player.x, player.y)) {
@@ -153,12 +170,13 @@ void playerPhysics() {
     else {
         coyoteFrame++;
     }
-if (!player.onGround) {
-    if (checkCollision(player.x, player.y + 1)) {
-        player.onGround = true;
-        coyoteFrame = 0;
+
+    if (!player.onGround) {
+        if (checkCollision(player.x, player.y + 1)) {
+            player.onGround = true;
+            coyoteFrame = 0;
+        }
     }
-}
 }
 
 void drawPlayer() {

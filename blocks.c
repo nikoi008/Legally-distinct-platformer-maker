@@ -123,7 +123,14 @@ void initBlocks() {
     blocks[11].isUnique = false;
     blocks[11].ifTouched = dieScreen;
     blocks[11].showInEdtior = true;
-
+    Texture2D movingBlock = LoadTexture("sprites/blocks/movement.png");
+    blocks[12].sprite = movingBlock;
+    blocks[12].blockID = 12;
+    blocks[12].solid = true;
+    blocks[12].coyoteTime = true;
+    blocks[12].isUnique = false;
+    blocks[12].ifTouched = NULL;
+    blocks[12].showInEdtior = true;
     for (int i = 0; i < TOTAL_BLOCKS; i++) {
         SetTextureFilter(blocks[i].sprite, TEXTURE_FILTER_POINT);
     }
