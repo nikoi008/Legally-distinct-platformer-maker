@@ -15,7 +15,6 @@ typedef struct {
 } editorTooltips;
 
 #define SHORTCUTS 2
-
 editorTooltips tooltips[TOTAL_BLOCKS + SHORTCUTS] = {
     [0]  = {"Deletes the selected block","Air/Delete",{8,SCREEN_H-24,8,8},{0}},
     [1]  = {"A solid block on all 4 sides","Grass",{20,SCREEN_H-24,8,8},{0}},
@@ -29,9 +28,14 @@ editorTooltips tooltips[TOTAL_BLOCKS + SHORTCUTS] = {
     [9]  = {"123","123",{116,SCREEN_H-24,8,8},{0}},
     [10] = {"Disappears and plays sound when collected","Coin",{128,SCREEN_H-24,8,8},{0}},
     [11] = {"Reverses at walls, does not avoid pits","Hedgehog (Enemy)",{140,SCREEN_H-24,8,8},{0}},
-    [12] = {"Moves right, reverses direction when it hits a solid block","Moving pad",{152,SCREEN_H-24,8,8},{0}},
-    [13] = {"Toggle Rectangle Placement (R)","Rectangle Tool",{SCREEN_W-24,SCREEN_H-24,8,8},{0}},
-    [14] = {"Toggle Camera Panning","Pan Tool",{SCREEN_W-12,SCREEN_H-24,8,8},{0}}
+    [12] = {"Moves right, reverses direction when it hits a solid block","Moving Pad",{152,SCREEN_H-24,8,8},{0}},
+    [13] = {"Grass deco","Grass",{164,SCREEN_H-24,8,8},{0}},
+    [14] = {"Cloud deco","Cloud",{176,SCREEN_H-24,16,8},{0}},
+    [15] = {"Flower deco","Flowers",{200,SCREEN_H-24,8,8},{0}},
+    [16] = {"Used to unlock doors", "Key", {212, SCREEN_H-24, 8, 8}, {0}},
+    [17] = {"Needs a key to pass through", "Door", {224, SCREEN_H-24, 8, 8}, {0}},
+    [18] = {"Toggle rectangle fill (R)", "Rectangle Fill", {SCREEN_W-24 - 8, SCREEN_H-24, 8, 8}, {0}},
+    [19] = {"Toggle camera pan (SHIFT + Left Click or MMB)", "Pan Tool", {SCREEN_W-12, SCREEN_H-24, 8, 8}, {0}},
 };
 
 bool mouseOverUi() {
@@ -64,21 +68,23 @@ void cameraInput() {
 }
 
 void tileSelect() {
+
     DrawRectangle(0, SCREEN_H - 32, SCREEN_W, 32, GRAY);
 
     const char* hoveredName = NULL;
     const char* hoveredDesc = NULL;
-
+    if (tooltips[18].sprite.id == 0) tooltips[18].sprite = LoadTexture("sprites/menu/rectangle.png");
+    if (tooltips[19].sprite.id == 0) tooltips[19].sprite = LoadTexture("sprites/menu/pan.png");
     for (int i = 0; i < (SHORTCUTS + TOTAL_BLOCKS); i++) {
         if (i < TOTAL_BLOCKS && tooltips[i].sprite.id == 0) {
             tooltips[i].sprite = blocks[i].sprite;
         }
 
         Color tint = WHITE;
-        if (i == 13 && rectangle) tint = GRAY; 
-        if (i == 14 && isPanning) tint = GRAY; 
+        if (i == 18 && rectangle) tint = GRAY;
+        if (i == 19 && isPanning) tint = GRAY; 
 
-        if (tooltips[i].sprite.id != 0) {
+        if (tooltips[i].sprite.id != 0 ) {
             DrawTexture(tooltips[i].sprite, tooltips[i].bounds.x, tooltips[i].bounds.y, tint);
         } else {
             DrawRectangleRec(tooltips[i].bounds, Fade(tint, 0.5f));
@@ -96,9 +102,9 @@ void tileSelect() {
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 if (i < TOTAL_BLOCKS) {
                     currentTile = blocks[i].blockID;
-                } else if (i == 13) {
+                } else if (i == 18) {
                     rectangle = !rectangle;
-                } else if (i == 14) {
+                } else if (i == 19) {
                     isPanning = !isPanning;
                 }
             }

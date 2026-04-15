@@ -2,7 +2,8 @@
 #include "player.h"
 #include <math.h>
 #include <stdlib.h>
-
+#include "globals.h"
+int keys = 0;
 unsigned char worldMap[WORLD_H][WORLD_W] = { 0 };
 block blocks[TOTAL_BLOCKS] = { 0 };
 Vector2 flagPos = { -1, -1 };
@@ -14,6 +15,10 @@ void collectCoin() {
     PlaySound(coinPickup);
     worldMap[player.tileY][player.tileX] = 0;
     player.coins++;
+}
+void collectKey() {
+    worldMap[player.tileY][player.tileX] = 0; 
+    keys++;
 }
 
 void initBlocks() {
@@ -131,6 +136,49 @@ void initBlocks() {
     blocks[12].isUnique = false;
     blocks[12].ifTouched = NULL;
     blocks[12].showInEdtior = true;
+
+    Texture2D grass = LoadTexture("sprites/blocks/grass.png");
+    blocks[13].sprite = grass;
+    blocks[13].blockID = 13;
+    blocks[13].solid = false;
+    blocks[13].coyoteTime = false;
+    blocks[13].isUnique = false;
+    blocks[13].ifTouched = NULL;
+    blocks[13].showInEdtior = true;
+
+    Texture2D cloud = LoadTexture("sprites/blocks/cloud.png");
+    blocks[14].sprite = cloud;
+    blocks[14].blockID = 14;
+    blocks[14].solid = false;
+    blocks[14].coyoteTime = false;
+    blocks[14].isUnique = true;
+    blocks[14].ifTouched = NULL;
+    blocks[14].showInEdtior = true;
+
+    Texture2D flowers = LoadTexture("sprites/blocks/flowers.png");
+    blocks[15].sprite = flowers;
+    blocks[15].blockID = 15;
+    blocks[15].solid = false;
+    blocks[15].coyoteTime = false;
+    blocks[15].isUnique = false;
+    blocks[15].ifTouched = NULL;
+    blocks[15].showInEdtior = true;
+
+    Texture2D key = LoadTexture("sprites/blocks/key.png");
+    blocks[16].sprite = key;
+    blocks[16].blockID = 16;
+    blocks[16].solid = false;
+    blocks[16].ifTouched = collectKey; 
+    blocks[16].showInEdtior = true;
+
+    Texture2D door = LoadTexture("sprites/blocks/door.png");
+    blocks[17].sprite = door;
+    blocks[17].blockID = 17;
+    blocks[17].solid = true; 
+    blocks[17].ifTouched = NULL; 
+    blocks[17].showInEdtior = true;
+
+    
     for (int i = 0; i < TOTAL_BLOCKS; i++) {
         SetTextureFilter(blocks[i].sprite, TEXTURE_FILTER_POINT);
     }
@@ -153,6 +201,10 @@ void placeTile(int tileX, int tileY, int tileID) {
             endPos.x = tileX;
             endPos.y = tileY;
             break;
+	case 14:
+	    if (tileX + 1 < WORLD_H) {
+	    worldMap[tileY][tileX + 1] = 14;
+	    }
         }
     }
     if (tileID == 0 && tileX == flagPos.x && tileY == flagPos.y) {

@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "enemy.h"
+#include "globals.h"
 #define GRAVITY 0.5f
 #define JUMP_FORCE 5.0f
 #define PLAYER_SIZE 7
@@ -86,6 +87,25 @@ void callIfTouched() {
     }
 }
  
+
+void door() {
+    int left = coordsToTile(player.x - 1);
+    int right = coordsToTile(player.x + PLAYER_HITBOX + 1);
+    int top = coordsToTile(player.y - 1);
+    int bottom = coordsToTile(player.y + PLAYER_HITBOX + 1);
+
+    for (int y = top; y <= bottom; y++) {
+        for (int x = left; x <= right; x++) {
+            if (x >= 0 && x < WORLD_W && y >= 0 && y < WORLD_H) {
+                if (worldMap[y][x] == 17 && keys > 0) {
+                    worldMap[y][x] = 0; 
+                    keys--;
+                }
+            }
+        }
+    }
+}
+
 bool checkCollision(float x, float y) {
     int left = (int)x / TILE_SIZE;
     int right = (int)(x + PLAYER_SIZE - 1) / TILE_SIZE;
@@ -177,6 +197,7 @@ void playerPhysics() {
             coyoteFrame = 0;
         }
     }
+    door();
 }
 
 void drawPlayer() {

@@ -9,7 +9,7 @@
 #define WORLD_H 50
 #define TILE_SIZE 8
 #define PLAYER_HITBOX 7
-#define TOTAL_BLOCKS 13
+#define TOTAL_BLOCKS 18
 
 typedef enum { MENU, EDITOR, PLATFORMER } GameState;
 
@@ -38,4 +38,5 @@ extern int currentTile;
 extern bool editing;
 extern Texture2D play;
 extern Texture2D trash;
+extern int keys;
 #endif
