@@ -1,7 +1,7 @@
 # Legally-distinct-platformer-maker
 
 # About
-Legally-distinct-platformer maker is a mario maker inspired game with a custom platforming,enemy,collision and tiling engine I made with C and raylib for the graphics, sound and input. It currently features 8 different blocks and 1 enemy, as well as a level editor that is intuitive and fast to prototype, with shortcuts and tools such as rectangle fill, along with an 8x8 charm.
+Legally-distinct-platformer maker is a mario maker inspired game with a custom platforming,enemy,collision and tiling engine I made with C and raylib for the graphics, sound and input, as well as using Emscriptem for the web build. It currently features 8 different blocks and 1 enemy, as well as a level editor that is intuitive and fast to prototype, with shortcuts and tools such as rectangle fill, along with an 8x8 charm.
 
 # Blocks
 As mentioned, there are 15 block types and 1 enemy - here is all that you need to know to start making levels
