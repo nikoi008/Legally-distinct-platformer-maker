@@ -1,6 +1,6 @@
 #ifndef ENEMY_H
 #define ENEMY_H
-
+//please work web build <3
 #include "globals.h"
 #define HEDGEHOG_SPEED 0.5f
 typedef struct {
