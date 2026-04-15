@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "enemy.h"
+#include "globals.h"
 #define GRAVITY 0.5f
 #define JUMP_FORCE 5.0f
 #define PLAYER_SIZE 7
@@ -17,17 +18,17 @@ void initPlayer() {
     camera.offset = (Vector2){ SCREEN_W / 2.0f, SCREEN_H / 2.0f };
     camera.zoom = 1.0f;
     player.x = flagPos.x * 8;
-    player.y = flagPos.y * 8;
+    player.y = (flagPos.y * 8) - 7;
     camera.target = (Vector2){ player.x + 4,player.y + 4 };
     player.tileX = flagPos.x;
     player.tileY = flagPos.y;
     player.acceleration = 0.2f;
-    player.maxSpeed = 3.0f;
+    player.maxSpeed = 1.75f;
     player.currentSpeed = 0.0f;
-    player.jumping = false;
-    player.falling = false;
-    player.sprinting = false;
-    player.powerup = 0;
+    //player.jumping = false;
+    //player.falling = false;
+    //player.sprinting = false; remove?
+    player.powerup = 0; //implement in future?
     player.facingRight = false;
     player.coins = 0;
     clearHedgehog();
@@ -39,6 +40,15 @@ void initPlayer() {
             }
         }
     }
+    clearPad();
+    for (int y = 0; y < WORLD_H; y++) {
+        for (int x = 0; x < WORLD_W; x++) {
+            if (worldMap[y][x] == 12) {
+                addPad(x * TILE_SIZE, y * TILE_SIZE);
+                worldMap[y][x] = 0;
+            }
+        }
+}
 }
 
 void winScreen() {
@@ -48,13 +58,11 @@ void winScreen() {
 
 void dieScreen() {
     player.x = flagPos.x * 8;
-    player.y = flagPos.y * 8;
+    player.y = (flagPos.y * 8) - 7;
     player.currentSpeed = 0;
+    player.speedY = 0;
 }
 
-int coordsToTile(int coord) {
-    return coord / 8;
-}
 
 void callIfTouched() {
     int left = coordsToTile(player.x);
@@ -78,6 +86,25 @@ void callIfTouched() {
         }
     }
 }
+ 
+
+void door() {
+    int left = coordsToTile(player.x - 1);
+    int right = coordsToTile(player.x + PLAYER_HITBOX + 1);
+    int top = coordsToTile(player.y - 1);
+    int bottom = coordsToTile(player.y + PLAYER_HITBOX + 1);
+
+    for (int y = top; y <= bottom; y++) {
+        for (int x = left; x <= right; x++) {
+            if (x >= 0 && x < WORLD_W && y >= 0 && y < WORLD_H) {
+                if (worldMap[y][x] == 17 && keys > 0) {
+                    worldMap[y][x] = 0; 
+                    keys--;
+                }
+            }
+        }
+    }
+}
 
 bool checkCollision(float x, float y) {
     int left = (int)x / TILE_SIZE;
@@ -86,32 +113,53 @@ bool checkCollision(float x, float y) {
     int bottom = (int)(y + PLAYER_SIZE - 1) / TILE_SIZE;
 
     if (left < 0 || right >= WORLD_W || top < 0 || bottom >= WORLD_H) return true;
-    return tileSolid(left * TILE_SIZE, top * TILE_SIZE) ||
-        tileSolid(right * TILE_SIZE, top * TILE_SIZE) ||
-        tileSolid(left * TILE_SIZE, bottom * TILE_SIZE) ||
-        tileSolid(right * TILE_SIZE, bottom * TILE_SIZE);
+
+    if (tileSolid(left * TILE_SIZE, top * TILE_SIZE)   ||
+        tileSolid(right * TILE_SIZE, top * TILE_SIZE)  ||
+        tileSolid(left * TILE_SIZE, bottom * TILE_SIZE)||
+        tileSolid(right * TILE_SIZE, bottom * TILE_SIZE))
+        return true;
+
+    return padSolid(x,y) ||
+           padSolid(x + PLAYER_SIZE - 1, y) ||
+           padSolid(x,y + PLAYER_SIZE - 1) ||
+           padSolid(x + PLAYER_SIZE - 1, y + PLAYER_SIZE - 1);
 }
+#define PLAYER_FRITCION 0.1f
 
 void playerInput() {
-    if (IsKeyDown(KEY_LEFT)) {
+    bool moving = false;
+    if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
         player.currentSpeed -= player.acceleration;
         player.facingRight = false;
+        moving = true;
     }
-    if (IsKeyDown(KEY_RIGHT)) {
+    if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
         player.currentSpeed += player.acceleration;
         player.facingRight = true;
+        moving = true;
     }
-
+    if (!moving) {
+        if (player.currentSpeed > 0) {
+            player.currentSpeed -=PLAYER_FRITCION;
+            if (player.currentSpeed < 0) player.currentSpeed = 0; 
+        }
+        else if (player.currentSpeed < 0) {
+            player.currentSpeed += PLAYER_FRITCION;
+            if(player.currentSpeed > 0) player.currentSpeed = 0;    
+        }
+    }
     if (IsKeyPressed(KEY_SPACE)) {
         if (player.onGround || coyoteFrame < COYOTE_FRAMES) {
             player.speedY = -JUMP_FORCE;
             player.onGround = false;
             coyoteFrame = COYOTE_FRAMES;
+            //moving???
         }
     }
     player.currentSpeed = Clamp(player.currentSpeed, -player.maxSpeed, player.maxSpeed);
+    
 }
-
 void playerPhysics() {
     player.x += player.currentSpeed;
     if (checkCollision(player.x, player.y)) {
@@ -122,7 +170,9 @@ void playerPhysics() {
         player.currentSpeed = 0;
     }
 
-    player.speedY += GRAVITY;
+    if (!player.onGround) player.speedY += GRAVITY;
+    else player.speedY = 0;
+
     player.y += player.speedY;
 
     player.onGround = false;
@@ -140,7 +190,14 @@ void playerPhysics() {
     else {
         coyoteFrame++;
     }
-    player.currentSpeed *= 0.93f;
+
+    if (!player.onGround) {
+        if (checkCollision(player.x, player.y + 1)) {
+            player.onGround = true;
+            coyoteFrame = 0;
+        }
+    }
+    door();
 }
 
 void drawPlayer() {
@@ -149,6 +206,6 @@ void drawPlayer() {
     DrawTexturePro(player.pTex, source, dest, (Vector2){ 0.0f,0.0f }, 0.0f, WHITE);
 }
 void playerCamera() {
-    Vector2 targetPos = (Vector2){ player.x + 4, player.y + 4 };
+    Vector2 targetPos = (Vector2){ floorf(player.x + 4), floorf(player.y + 4) };
     camera.target = Vector2Lerp(camera.target, targetPos, 0.1f);
 }

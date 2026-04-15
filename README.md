@@ -1,23 +1,31 @@
 # Legally-distinct-platformer-maker
 https://nikoi008.github.io/Legally-distinct-platformer-maker/
 # About
-Legally-distinct-platformer maker is a mario maker inspired game with a custom platforming,enemy,collision and tiling engine I made with C and raylib for the graphics, sound and input. It currently features 8 different blocks and 1 enemy, as well as a level editor that is intuitive and fast to prototype, with shortcuts and tools such as rectangle fill, along with an 8x8 charm.
+Legally-distinct-platformer maker is a mario maker inspired game with a custom platforming,enemy,collision and tiling engine I made with C and raylib for the graphics, sound and input, as well as using Emscriptem for the web build. It currently features 8 different blocks and 1 enemy, as well as a level editor that is intuitive and fast to prototype, with shortcuts and tools such as rectangle fill, along with an 8x8 charm.
 
 # Blocks
-As mentioned, there are 8 block types and 1 enemy - here is all that you need to know to start making levels
+As mentioned, there are 15 block types and 1 enemy - here is all that you need to know to start making levels
 
-| Block name | Features | Internal ID|
-|------------|----------|-------------|
-| Air/delete | deletes the selected block | 0|
-| Grass      | a solid block on all 4 sides  | 1
-| Brick      |  a solid block on all 4 sides | 2
-| Start flag | a block that determines the player's start position - level must have one to start the level| 3
-| End flag | A block that completes the level - level must have one so it can be ended| 4
-| Spike | A spike that causes the player to go back to the start position when touched | 5
-| Red cycle block | A block that is solid when blue is inactive and not solid when blue is active| 6
-|Blue cycle block | A block that is solid when red is inactive and not solid when red is active | 7
-|Coin| Plays a sound when collected, then disappears | 8
-| Hedgehog (enemy) | An enemy that moves in the opposite direction when facing a wall, but does not move away from pits | 9
+| Block name | Features | Internal ID |
+| :--- | :--- | :--- |
+| Air/delete | deletes the selected block | 0 |
+| Grass | a solid block on all 4 sides | 1 |
+| Brick | a solid block on all 4 sides | 2 |
+| Start flag | a block that determines the player's start position - level must have one to start the level | 3 |
+| End flag | A block that completes the level - level must have one so it can be ended | 4 |
+| Spike | A spike that causes the player to go back to the start position when touched | 5 |
+| Red cycle block | A block that is solid when blue is inactive and not solid when blue is active | 6 |
+| Blue cycle block | A block that is solid when red is inactive and not solid when red is active | 7 |
+| Coin | Plays a sound when collected, then disappears | 8 |
+| Hedgehog (enemy) | An enemy that moves in the opposite direction when facing a wall, but does not move away from pits | 9 |
+| Coin | Disappears and plays sound when collected | 10 |
+| Hedgehog (Enemy) | Reverses at walls, does not avoid pits | 11 |
+| Moving Pad | Moves right, reverses direction when it hits a solid block | 12 |
+| Grass | Grass deco | 13 |
+| Cloud | Cloud deco | 14 |
+| Flowers | Flower deco | 15 |
+| Key | Used to unlock doors | 16 |
+
 
 # Editor controls
 

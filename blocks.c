@@ -2,7 +2,8 @@
 #include "player.h"
 #include <math.h>
 #include <stdlib.h>
-
+#include "globals.h"
+int keys = 0;
 unsigned char worldMap[WORLD_H][WORLD_W] = { 0 };
 block blocks[TOTAL_BLOCKS] = { 0 };
 Vector2 flagPos = { -1, -1 };
@@ -14,6 +15,10 @@ void collectCoin() {
     PlaySound(coinPickup);
     worldMap[player.tileY][player.tileX] = 0;
     player.coins++;
+}
+void collectKey() {
+    worldMap[player.tileY][player.tileX] = 0; 
+    keys++;
 }
 
 void initBlocks() {
@@ -123,7 +128,57 @@ void initBlocks() {
     blocks[11].isUnique = false;
     blocks[11].ifTouched = dieScreen;
     blocks[11].showInEdtior = true;
+    Texture2D movingBlock = LoadTexture("sprites/blocks/movement.png");
+    blocks[12].sprite = movingBlock;
+    blocks[12].blockID = 12;
+    blocks[12].solid = true;
+    blocks[12].coyoteTime = true;
+    blocks[12].isUnique = false;
+    blocks[12].ifTouched = NULL;
+    blocks[12].showInEdtior = true;
 
+    Texture2D grass = LoadTexture("sprites/blocks/grass.png");
+    blocks[13].sprite = grass;
+    blocks[13].blockID = 13;
+    blocks[13].solid = false;
+    blocks[13].coyoteTime = false;
+    blocks[13].isUnique = false;
+    blocks[13].ifTouched = NULL;
+    blocks[13].showInEdtior = true;
+
+    Texture2D cloud = LoadTexture("sprites/blocks/cloud.png");
+    blocks[14].sprite = cloud;
+    blocks[14].blockID = 14;
+    blocks[14].solid = false;
+    blocks[14].coyoteTime = false;
+    blocks[14].isUnique = true;
+    blocks[14].ifTouched = NULL;
+    blocks[14].showInEdtior = true;
+
+    Texture2D flowers = LoadTexture("sprites/blocks/flowers.png");
+    blocks[15].sprite = flowers;
+    blocks[15].blockID = 15;
+    blocks[15].solid = false;
+    blocks[15].coyoteTime = false;
+    blocks[15].isUnique = false;
+    blocks[15].ifTouched = NULL;
+    blocks[15].showInEdtior = true;
+
+    Texture2D key = LoadTexture("sprites/blocks/key.png");
+    blocks[16].sprite = key;
+    blocks[16].blockID = 16;
+    blocks[16].solid = false;
+    blocks[16].ifTouched = collectKey; 
+    blocks[16].showInEdtior = true;
+
+    Texture2D door = LoadTexture("sprites/blocks/door.png");
+    blocks[17].sprite = door;
+    blocks[17].blockID = 17;
+    blocks[17].solid = true; 
+    blocks[17].ifTouched = NULL; 
+    blocks[17].showInEdtior = true;
+
+    
     for (int i = 0; i < TOTAL_BLOCKS; i++) {
         SetTextureFilter(blocks[i].sprite, TEXTURE_FILTER_POINT);
     }
@@ -146,6 +201,10 @@ void placeTile(int tileX, int tileY, int tileID) {
             endPos.x = tileX;
             endPos.y = tileY;
             break;
+	case 14:
+	    if (tileX + 1 < WORLD_H) {
+	    worldMap[tileY][tileX + 1] = 14;
+	    }
         }
     }
     if (tileID == 0 && tileX == flagPos.x && tileY == flagPos.y) {
@@ -156,7 +215,7 @@ void placeTile(int tileX, int tileY, int tileID) {
     }
     worldMap[tileY][tileX] = tileID;
 }
-
+/*
 void DrawLevel() {
     for (int y = 0; y < WORLD_H; y++) {
         for (int x = 0; x < WORLD_W; x++) {
@@ -168,6 +227,28 @@ void DrawLevel() {
                 if (tileID == 8 || tileID == 9)
                     blockTexture = redTileOn ? blocks[9].sprite : blocks[8].sprite;
                 DrawTexture(blockTexture, x * TILE_SIZE, y * TILE_SIZE, WHITE);
+            }
+        }
+    }
+}*/
+
+void DrawLevel() {
+    int closestX = (int)((camera.target.x - (SCREEN_W / 2.0f)) / TILE_SIZE) - 1;
+    int furthestX = (int)((camera.target.x + (SCREEN_W / 2.0f)) / TILE_SIZE) + 1;
+    if (closestX < 0) closestX = 0;
+    if (furthestX >= WORLD_W) furthestX = WORLD_W - 1;
+    for (int y = 0; y < WORLD_H; y++) {
+        for (int x = closestX; x <= furthestX; x++) {
+            int tileID = worldMap[y][x];
+            if (tileID > 0 && tileID < TOTAL_BLOCKS) {
+                Texture2D blockTexture = blocks[tileID].sprite;
+                if (tileID == 6 || tileID == 7) {
+                    blockTexture = redTileOn ? blocks[6].sprite : blocks[7].sprite;
+                }
+                if (tileID == 8 || tileID == 9) {
+                    blockTexture = redTileOn ? blocks[9].sprite : blocks[8].sprite;
+                }
+                DrawTexture(blockTexture, x * 8, y * 8 , WHITE); 
             }
         }
     }
