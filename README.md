@@ -26,7 +26,13 @@ As mentioned, there are 15 block types and 1 enemy - here is all that you need t
 | Flowers | Flower deco | 15 |
 | Key | Used to unlock doors | 16 |
 
-
+# Optimisation  
+For the flavourtown optimisation sidequest, I:
+    Optimised the drawing engine to do 86% fewer draw calls
+    Used the inline keyword for functions that get called often
+    Used bit shifting for faster multiplication/division
+    Added the -02 compiler flag for reduced binary 
+    
 # Editor controls
 
 | Control | Action|
@@ -41,4 +47,3 @@ As mentioned, there are 15 block types and 1 enemy - here is all that you need t
 
 # Building
 This project uses [raylib](https://www.raylib.com/) as the graphics library. A makefile is provided so you can build with `make`
-
