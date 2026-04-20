@@ -31,6 +31,13 @@ As mentioned, there are 8 block types and 1 enemy - here is all that you need to
 | P (while in editor) | Starts the level |
 | E (while in level) | Goes back to editor |
 
+# Optimisation  
+For the flavourtown optimisation sidequest, I:
+    Optimised the drawing engine to do 86% fewer draw calls
+    Used the inline keyword for functions that get called often
+    Used bit shifting for faster multiplication/division
+    Added the -02 compiler flag for reduced binary size and more agressive compiler optimisations
+
 # Building
 This project uses [raylib](https://www.raylib.com/) as the graphics library. A makefile is provided so you can build with `make`
 
